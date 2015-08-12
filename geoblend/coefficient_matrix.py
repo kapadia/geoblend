@@ -4,6 +4,38 @@ import sys
 import pyamg
 import numpy as np
 from scipy import sparse
+from scipy.ndimage import convolve
+
+
+def get_coefficient_matrix_size(mask):
+    """
+    Get the number of terms required for solving the Poisson equation
+    for an arbitrarily shaped image described by a mask.
+
+    :param mask:
+        ndarray where the value of 1 represents valid data
+    """
+
+    # Structure element representing 4-connected neighbors
+    selem = np.array([
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 1, 0]
+    ])
+
+    # TODO: There should be a fastest way to find boundaries.
+    operator = pyamg.gallery.poisson(mask.shape)
+    boundaries = (operator * mask.ravel()).reshape(mask.shape)
+    boundaries[boundaries > 0] = 0
+    boundaries[boundaries < 0] = 1
+
+    # Get the number of 4-connected neighbors along the mask boundary
+    n_boundary = convolve(boundaries, selem)[np.where(mask == 1)].sum()
+
+    # The number of 4-connected neighbors within the mask is always a multiple of 4
+    n_image = 4 * np.count_nonzero(mask)
+
+    return n_image + n_boundary
 
 
 def save_levels(filename, levels):
