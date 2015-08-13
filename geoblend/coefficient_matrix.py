@@ -44,6 +44,8 @@ def matrix_from_mask(mask):
     
     :param mask:
         ndarray representing the region of valid pixels in an image.
+        
+    .. todo:: Support masks that represent the rectangular image case.
     """
     
     height, width = mask.shape
