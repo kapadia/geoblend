@@ -23,16 +23,16 @@ def boundary_from_mask(mask):
     # from a pixel. This is crafted to return the number of
     # 4-connected pixels intersecting the data region.
     selem = np.array([
-        [0, 1, 0],
-        [1, -4, 1],
-        [0, 1, 0]
+        [0, -1, 0],
+        [-1, 4, -1],
+        [0, -1, 0]
     ])
     
     # TODO: Using the Poission kernal from pyamg can also be done. The sign
     #       is flipped, and requires a bit more memory to store the sparse
     #       matrix representation of the kernal.
-    boundaries = convolve(mask, selem)
-    boundaries[boundaries < 0] = 0
+    boundaries = convolve(mask, selem, mode='constant', cval=0)
+    # boundaries[boundaries < 0] = 0
     
     return boundaries
 
@@ -66,9 +66,9 @@ def matrix_from_mask(mask):
     
     # The coefficient 4 corresponds to regions of valid data
     # where the index corresponds to the raveled view of the mask.
-    c[indices] = 4
     b = boundary_from_mask(mask).ravel()
-    c += b
+    c[np.nonzero(b)] = 1
+    c[indices] = 4
     
     #
     # Upper diagonal
