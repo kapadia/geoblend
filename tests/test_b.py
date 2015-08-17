@@ -38,7 +38,7 @@ def test_b():
     expected = np.array([
         1682, 1080, 1718, 2408, -110, 992, -1078, 1076, 2048, 2306, 210, 250, 460, 2182, 352, 2542
     ])
-
+    
     vector = b(mask, field, reference)
-
+    
     assert np.all(expected == vector)
