@@ -2,11 +2,17 @@
 import numpy as np
 cimport numpy as np
 
-DTYPE = np.int8
-ctypedef np.int8_t DTYPE_t
+
+# DTYPE_UBYTE = np.uint8
+# ctypedef np.uint8_t DTYPE_UBYTE_t
+
+DTYPE_INT8 = np.int8
+DTYPE_UINT8 = np.uint8
+ctypedef np.int8_t DTYPE_INT8_t
+ctypedef np.uint8_t DTYPE_UINT8_t
 
 
-def matrix_from_mask(np.ndarray[DTYPE_t, ndim=2] mask):
+def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     """
     Create the coefficient matrix corresponding to the
     linearized Poisson problem. This function uses a mapping
@@ -23,7 +29,7 @@ def matrix_from_mask(np.ndarray[DTYPE_t, ndim=2] mask):
               padding is required between valid data and the mask edge.
     """
 
-    assert mask.dtype == DTYPE
+    assert mask.dtype == DTYPE_UINT8
 
     cdef int height = mask.shape[0]
     cdef int width = mask.shape[1]
@@ -42,9 +48,9 @@ def matrix_from_mask(np.ndarray[DTYPE_t, ndim=2] mask):
     # For N unknown pixels, there are at most 4 * N coefficients.
     cdef int n = np.count_nonzero(mask)
     cdef int n_coeff = 4 * n
-    cdef np.ndarray[DTYPE_t, ndim=1] row = np.zeros(n_coeff, dtype=np.int8)
-    cdef np.ndarray[DTYPE_t, ndim=1] col = np.zeros(n_coeff, dtype=np.int8)
-    cdef np.ndarray[DTYPE_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int8)
+    cdef np.ndarray[DTYPE_INT8_t, ndim=1] row = np.zeros(n_coeff, dtype=np.int8)
+    cdef np.ndarray[DTYPE_INT8_t, ndim=1] col = np.zeros(n_coeff, dtype=np.int8)
+    cdef np.ndarray[DTYPE_INT8_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int8)
     
     cdef int ii, neighbors, nj, ni, ej, ei, sj, si, wj, wi, offset
 
