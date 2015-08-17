@@ -5,8 +5,11 @@ cimport numpy as np
 
 DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
+DTYPE_INT32 = np.int32
+
 ctypedef np.int8_t DTYPE_INT8_t
 ctypedef np.uint8_t DTYPE_UINT8_t
+ctypedef np.int32_t DTYPE_INT32_t
 
 
 def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
@@ -45,9 +48,9 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     # For N unknown pixels, there are at most 4 * N coefficients.
     cdef int n = np.count_nonzero(mask)
     cdef int n_coeff = 4 * n
-    cdef np.ndarray[DTYPE_INT8_t, ndim=1] row = np.zeros(n_coeff, dtype=np.int8)
-    cdef np.ndarray[DTYPE_INT8_t, ndim=1] col = np.zeros(n_coeff, dtype=np.int8)
-    cdef np.ndarray[DTYPE_INT8_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int8)
+    cdef np.ndarray[DTYPE_INT32_t, ndim=1] row = np.zeros(n_coeff, dtype=np.int32)
+    cdef np.ndarray[DTYPE_INT32_t, ndim=1] col = np.zeros(n_coeff, dtype=np.int32)
+    cdef np.ndarray[DTYPE_INT32_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int32)
     
     cdef int i, j, ii, neighbors, nj, ni, ej, ei, sj, si, wj, wi, offset
 
