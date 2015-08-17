@@ -49,7 +49,7 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     cdef np.ndarray[DTYPE_INT8_t, ndim=1] col = np.zeros(n_coeff, dtype=np.int8)
     cdef np.ndarray[DTYPE_INT8_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int8)
     
-    cdef int ii, neighbors, nj, ni, ej, ei, sj, si, wj, wi, offset
+    cdef int i, j, ii, neighbors, nj, ni, ej, ei, sj, si, wj, wi, offset
 
     for j in range(height):
         for i in range(width):
