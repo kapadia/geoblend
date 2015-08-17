@@ -3,6 +3,7 @@ from codecs import open as codecs_open
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Build import cythonize
+import numpy as np
 
 
 # Get the long description from the relevant file
@@ -15,7 +16,7 @@ ext_options = {
 }
 
 extensions = [
-    Extension('coefficients', ['geoblend/coefficients.pyx'], **ext_options)
+    Extension('geoblend.coefficients', ['geoblend/coefficients.pyx'], **ext_options)
 ]
 
 setup(name='geoblend',
