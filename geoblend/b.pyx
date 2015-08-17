@@ -1,5 +1,5 @@
 
-# This file is called "b" since the function below returns a column
+# This file is called "b" since the function below returns the column
 # vector traditionally known as "b" when solving a linear system Ax=b.
 
 import numpy as np
@@ -17,7 +17,7 @@ ctypedef np.uint16_t DTYPE_UINT16_t
 ctypedef np.int32_t DTYPE_INT32_t
 
 
-def b(mask, field, reference):
+def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] field, np.ndarray[DTYPE_UINT16_t, ndim=2] reference):
     """
     Computes the column vector b from the linearized Poisson equation.
     
@@ -42,22 +42,24 @@ def b(mask, field, reference):
     assert mask.dtype == DTYPE_UINT8
     assert field.dtype == DTYPE_INT32
     assert reference.dtype == DTYPE_UINT16
-    
-    # TODO: Assert shapes of mask, field, and reference are the same
-    #       this ain't python. things get corrupt.
-    
+
     cdef int height = mask.shape[0]
     cdef int width = mask.shape[1]
-    
+
+    assert field.shape[0] == height
+    assert field.shape[1] == width
+    assert reference.shape[0] == height
+    assert reference.shape[1] == width
+
     cdef int nj, ni, ej, ei, sj, si, wj, wi, coeff
     cdef int idx = 0
-    
+
     # TODO: This value is needed by matrix_from_mask. Loops can be
-    #       reduced if needed, by sacrificing modularity by combining
+    #       reduced if needed, by sacrificing modularity and combining
     #       these functions.
     cdef int n = np.count_nonzero(mask)
     cdef np.ndarray[DTYPE_INT32_t, ndim=1] vector = np.zeros(n, dtype=np.int32)
-    
+
     for j in range(height):
         for i in range(width):
 
@@ -69,8 +71,8 @@ def b(mask, field, reference):
             # to the array at the end.
             
             # The major value is the value of the guidance field
-            # at the index of the pixel. Note the negative sign.
-            coeff = -field[j][i]
+            # at the index of the pixel.
+            coeff = 8 * field[j][i]
 
             nj = j - 1
             ni = i
@@ -80,43 +82,35 @@ def b(mask, field, reference):
                 # Neighbor lies outside of the data region,
                 # e.g. it is on the boundary. Sample the boundary
                 # value from the reference image.
-                coeff += reference[nj][ni]
+                coeff += 2 * reference[nj][ni]
             else:
-                coeff += field[nj][ni]
+                coeff -= 2 * field[nj][ni]
 
             ej = j
             ei = i + 1
 
             if mask[ej][ei] == 0:
-                coeff += reference[ej][ei]
+                coeff += 2 * reference[ej][ei]
             else:
-                coeff += field[ej][ei]
+                coeff -= 2 * field[ej][ei]
 
             sj = j + 1
             si = i
 
             if mask[sj][si] == 0:
-                coeff += reference[sj][si]
+                coeff += 2 * reference[sj][si]
             else:
-                coeff += field[sj][si]
+                coeff -= 2 * field[sj][si]
 
             wj = j
             wi = i - 1
             if mask[wj][wi] == 0:
-                coeff += reference[wj][wi]
+                coeff += 2 * reference[wj][wi]
             else:
-                coeff += field[wj][wi]
+                coeff -= 2 * field[wj][wi]
 
             # Assign the value to the output vector
             vector[idx] = coeff
             idx += 1
-    
+
     return vector
-    
-    
-    
-    
-    
-    
-    
-    
