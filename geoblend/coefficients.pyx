@@ -2,8 +2,8 @@
 import numpy as np
 cimport numpy as np
 
-DTYPE = np.int
-ctypedef np.int_t DTYPE_t
+DTYPE = np.int8
+ctypedef np.int8_t DTYPE_t
 
 
 def matrix_from_mask(np.ndarray[DTYPE_t, ndim=2] mask):
@@ -15,7 +15,8 @@ def matrix_from_mask(np.ndarray[DTYPE_t, ndim=2] mask):
 
     :param mask:
         ndarray where nonzero values represent the region
-        of valid pixels in an image.
+        of valid pixels in an image. The mask should be
+        typed to bool.
 
     .. todo:: Support masks that represent the rectangular image case.
     .. todo:: Support valid pixels on the edge of the mask. Currently,
