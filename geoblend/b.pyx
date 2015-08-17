@@ -56,7 +56,7 @@ def b(mask, field, reference):
     #       reduced if needed, by sacrificing modularity by combining
     #       these functions.
     cdef int n = np.count_nonzero(mask)
-    cdef np.ndarray[DTYPE_UINT16_t, ndim=1] vector = np.zeros(n, dtype=np.uint16)
+    cdef np.ndarray[DTYPE_INT32_t, ndim=1] vector = np.zeros(n, dtype=np.int32)
     
     for j in range(height):
         for i in range(width):
