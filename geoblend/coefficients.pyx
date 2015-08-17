@@ -3,9 +3,6 @@ import numpy as np
 cimport numpy as np
 
 
-# DTYPE_UBYTE = np.uint8
-# ctypedef np.uint8_t DTYPE_UBYTE_t
-
 DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
 ctypedef np.int8_t DTYPE_INT8_t
@@ -22,7 +19,7 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     :param mask:
         ndarray where nonzero values represent the region
         of valid pixels in an image. The mask should be
-        typed to bool.
+        typed to uint8.
 
     .. todo:: Support masks that represent the rectangular image case.
     .. todo:: Support valid pixels on the edge of the mask. Currently,
