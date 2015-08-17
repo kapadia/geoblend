@@ -9,9 +9,12 @@ cimport numpy as np
 DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
 DTYPE_UINT16 = np.uint16
+DTYPE_INT32 = np.int32
+
 ctypedef np.int8_t DTYPE_INT8_t
 ctypedef np.uint8_t DTYPE_UINT8_t
 ctypedef np.uint16_t DTYPE_UINT16_t
+ctypedef np.int32_t DTYPE_INT32_t
 
 
 def b(mask, field, reference):
@@ -37,7 +40,7 @@ def b(mask, field, reference):
     """
     
     assert mask.dtype == DTYPE_UINT8
-    assert field.dtype == DTYPE_INT8
+    assert field.dtype == DTYPE_INT32
     assert reference.dtype == DTYPE_UINT16
     
     # TODO: Assert shapes of mask, field, and reference are the same
