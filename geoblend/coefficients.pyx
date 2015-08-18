@@ -47,9 +47,9 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     #
     # Another approach is to be generous when allocating the row/column/data
     # arrays by using the upper bound for the number of coefficients.
-    # For N unknown pixels, there are at most 4 * N coefficients.
+    # For N unknown pixels, there are at most 5 * N coefficients.
     cdef int n = np.count_nonzero(mask)
-    cdef int n_coeff = 4 * n
+    cdef int n_coeff = 5 * n
 
     cdef np.ndarray[DTYPE_UINT32_t, ndim=1] row = np.zeros(n_coeff, dtype=np.uint32)
     cdef np.ndarray[DTYPE_UINT32_t, ndim=1] col = np.zeros(n_coeff, dtype=np.uint32)
@@ -59,79 +59,85 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
 
     for j in range(height):
         for i in range(width):
-            
+
             if mask[j][i] == 0:
                 continue
-            
+
             neighbors = 0
-            
-            nj = j - 1
-            ni = i
-            
-            if mask[nj][ni] == 1:
-                
-                # Count the number of valued pixels in the previous 
-                # row, and current row.
-                # BT-dubs - this is less efficient than I'd prefer.
-                offset = 0
-                for ii in range(ni, width):
-                    if mask[nj][ii] == 1:
-                        offset += 1
-                for ii in range(0, i):
-                    if mask[j][ii] == 1:
-                        offset += 1
-                
-                row[cidx] = eidx
-                col[cidx] = eidx - offset
-                data[cidx] = -4
-                
-                cidx += 1
+
+            # Define indices of 4-connected neighbors
+            nj, ni = j - 1, i
+            sj, si = j + 1, i
+            ej, ei = j, i + 1
+            wj, wi = j, i - 1
+
+            if nj >= 0 and nj <= height:
+
                 neighbors += 1
-            
-            ej = j
-            ei = i + 1
-            
-            if mask[ej][ei] == 1:
+
+                if mask[nj][ni] == 1:
+
+                    # Count the number of valued pixels in the previous 
+                    # row, and current row.
+                    # BT-dubs - this is less efficient than I'd prefer.
+                    offset = 0
+                    for ii in range(ni, width):
+                        if mask[nj][ii] == 1:
+                            offset += 1
+                    for ii in range(0, i):
+                        if mask[j][ii] == 1:
+                            offset += 1
                 
-                row[cidx] = eidx + 1
-                col[cidx] = eidx
-                data[cidx] = -4
+                    row[cidx] = eidx
+                    col[cidx] = eidx - offset
+                    data[cidx] = -4
                 
-                cidx += 1
+                    cidx += 1
+
+            if sj >= 0 and sj <= height:
+
                 neighbors += 1
-            
-            sj = j + 1
-            si = i
-            
-            if mask[sj][si] == 1:
-                
-                offset = 0
-                for ii in range(i, width):
-                    if mask[j][ii] == 1:
-                        offset += 1
-                for ii in range(0, si):
-                    if mask[sj][ii] == 1:
-                        offset += 1
-                
-                row[cidx] = eidx
-                col[cidx] = eidx + offset
-                data[cidx] = -4
-                
-                cidx += 1
+
+                if mask[sj][si] == 1:
+
+                    offset = 0
+                    for ii in range(i, width):
+                        if mask[j][ii] == 1:
+                            offset += 1
+                    for ii in range(0, si):
+                        if mask[sj][ii] == 1:
+                            offset += 1
+
+                    row[cidx] = eidx
+                    col[cidx] = eidx + offset
+                    data[cidx] = -4
+
+                    cidx += 1
+
+            if ei >= 0 and ei <= width:
+
                 neighbors += 1
-            
-            wj = j
-            wi = i - 1
-            
-            if mask [wj][wi] == 1:
+
+                if mask[ej][ei] == 1:
                 
-                row[cidx] = eidx - 1
-                col[cidx] = eidx
-                data[cidx] = -4
+                    row[cidx] = eidx + 1
+                    col[cidx] = eidx
+                    data[cidx] = -4
                 
-                cidx += 1
+                    cidx += 1
+            
+            if wi >= 0 and wi <= width:
+
                 neighbors += 1
-            
+
+                if mask[wj][wi] == 1:
+                
+                    row[cidx] = eidx - 1
+                    col[cidx] = eidx
+                    data[cidx] = -4
+                
+                    cidx += 1
+
             row[cidx] = eidx
             col[cidx] = eidx
             data[cidx] = 2 * neighbors + 8
