@@ -73,9 +73,9 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
 
             if nj >= 0 and nj <= height:
 
-                neighbors += 1
-
                 if mask[nj][ni] == 1:
+
+                    neighbors += 1
 
                     # Count the number of valued pixels in the previous 
                     # row, and current row.
@@ -96,9 +96,9 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
 
             if sj >= 0 and sj <= height:
 
-                neighbors += 1
-
                 if mask[sj][si] == 1:
+
+                    neighbors += 1
 
                     offset = 0
                     for ii in range(i, width):
@@ -116,10 +116,10 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
 
             if ei >= 0 and ei <= width:
 
-                neighbors += 1
-
                 if mask[ej][ei] == 1:
-                
+
+                    neighbors += 1
+
                     row[cidx] = eidx + 1
                     col[cidx] = eidx
                     data[cidx] = -4
@@ -128,10 +128,10 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
             
             if wi >= 0 and wi <= width:
 
-                neighbors += 1
-
                 if mask[wj][wi] == 1:
-                
+
+                    neighbors += 1
+
                     row[cidx] = eidx - 1
                     col[cidx] = eidx
                     data[cidx] = -4
