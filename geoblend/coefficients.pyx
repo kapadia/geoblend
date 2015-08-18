@@ -6,10 +6,12 @@ cimport numpy as np
 DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
 DTYPE_INT32 = np.int32
+DTYPE_UINT32 = np.uint32
 
 ctypedef np.int8_t DTYPE_INT8_t
 ctypedef np.uint8_t DTYPE_UINT8_t
 ctypedef np.int32_t DTYPE_INT32_t
+ctypedef np.uint32_t DTYPE_UINT32_t
 
 
 def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
@@ -39,8 +41,8 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     cdef int cidx = 0
 
     # Determine the number of coefficients that will be stored
-    # One approach is to convolve with a structuring element to 
-    # count the number of neighbors for each pixel, but this
+    # One approach is to convolve with a structuring element that
+    # counts the number of neighbors for each pixel, but this
     # is costly.
     #
     # Another approach is to be generous when allocating the row/column/data
@@ -48,8 +50,9 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     # For N unknown pixels, there are at most 4 * N coefficients.
     cdef int n = np.count_nonzero(mask)
     cdef int n_coeff = 4 * n
-    cdef np.ndarray[DTYPE_INT32_t, ndim=1] row = np.zeros(n_coeff, dtype=np.int32)
-    cdef np.ndarray[DTYPE_INT32_t, ndim=1] col = np.zeros(n_coeff, dtype=np.int32)
+
+    cdef np.ndarray[DTYPE_UINT32_t, ndim=1] row = np.zeros(n_coeff, dtype=np.uint32)
+    cdef np.ndarray[DTYPE_UINT32_t, ndim=1] col = np.zeros(n_coeff, dtype=np.uint32)
     cdef np.ndarray[DTYPE_INT32_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int32)
     
     cdef int i, j, ii, neighbors, nj, ni, ej, ei, sj, si, wj, wi, offset
