@@ -37,6 +37,8 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
               the gradient. A more precise representation may be calculated here
               if the source image is passed. Plus it will save the loop required
               when convolving the source image to find the gradient field.
+
+    .. todo:: Can field be Int16?
     """
     
     assert mask.dtype == DTYPE_UINT8
@@ -51,63 +53,65 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
     assert reference.shape[0] == height
     assert reference.shape[1] == width
 
-    cdef int nj, ni, ej, ei, sj, si, wj, wi, coeff
+    cdef int nj, ni, ej, ei, sj, si, wj, wi
     cdef int idx = 0
+    cdef int coeff
 
-    # TODO: This value is needed by matrix_from_mask. Loops can be
+    # TODO: This value is also needed by matrix_from_mask. Loops can be
     #       reduced if needed, by sacrificing modularity and combining
     #       these functions.
     cdef int n = np.count_nonzero(mask)
     cdef np.ndarray[DTYPE_INT32_t, ndim=1] vector = np.zeros(n, dtype=np.int32)
 
+    # TODO: nogil shiz?
     for j in range(height):
         for i in range(width):
 
             if mask[j][i] == 0:
                 continue
 
+            # Define indices of 4-connected neighbors
+            nj, ni = j - 1, i
+            sj, si = j + 1, i
+            ej, ei = j, i + 1
+            wj, wi = j, i - 1
+
             # Keep a running variable that represents the
             # element of the vector. This will be assigned
             # to the array at the end.
-            
+
             # The major value is the value of the guidance field
             # at the index of the pixel.
+
             coeff = 8 * field[j][i]
 
-            nj = j - 1
-            ni = i
+            if nj >= 0 and nj <= height:
 
-            if mask[nj][ni] == 0:
+                if mask[nj][ni] == 0:
+                    coeff += 2 * reference[nj][ni]
+                else:
+                    coeff -= 2 * field[nj][ni]
 
-                # Neighbor lies outside of the data region,
-                # e.g. it is on the boundary. Sample the boundary
-                # value from the reference image.
-                coeff += 2 * reference[nj][ni]
-            else:
-                coeff -= 2 * field[nj][ni]
+            if sj >= 0 and sj <= height:
 
-            ej = j
-            ei = i + 1
+                if mask[sj][si] == 0:
+                    coeff += 2 * reference[sj][si]
+                else:
+                    coeff -= 2 * field[sj][si]
 
-            if mask[ej][ei] == 0:
-                coeff += 2 * reference[ej][ei]
-            else:
-                coeff -= 2 * field[ej][ei]
+            if ei >= 0 and ei <= width:
 
-            sj = j + 1
-            si = i
+                if mask[ej][ei] == 0:
+                    coeff += 2 * reference[ej][ei]
+                else:
+                    coeff -= 2 * field[ej][ei]
+            
+            if wi >= 0 and wi <= width:
 
-            if mask[sj][si] == 0:
-                coeff += 2 * reference[sj][si]
-            else:
-                coeff -= 2 * field[sj][si]
-
-            wj = j
-            wi = i - 1
-            if mask[wj][wi] == 0:
-                coeff += 2 * reference[wj][wi]
-            else:
-                coeff -= 2 * field[wj][wi]
+                if mask[wj][wi] == 0:
+                    coeff += 2 * reference[wj][wi]
+                else:
+                    coeff -= 2 * field[wj][wi]
 
             # Assign the value to the output vector
             vector[idx] = coeff
