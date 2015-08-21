@@ -102,6 +102,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
                         if mask[nj + jj][ni + ii] == 0:
                             coeff += 4 * reference[nj][ni]
+                            break
 
             if sj >= 0 and sj <= height:
 
@@ -116,6 +117,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
                         if mask[sj + jj][si + ii] == 0:
                             coeff += 4 * reference[sj][si]
+                            break
 
             if ei >= 0 and ei <= width:
 
@@ -130,6 +132,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
                         if mask[ej + jj][ei + ii] == 0:
                             coeff += 4 * reference[ej][ei]
+                            break
             
             if wi >= 0 and wi <= width:
 
@@ -144,6 +147,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
                         if mask[wj + jj][wi + ii] == 0:
                             coeff += 4 * reference[wj][wi]
+                            break
             
             if boundary_neighbors > 0:
                 coeff -= ((2 * neighbors + 8) * reference[j][i])
