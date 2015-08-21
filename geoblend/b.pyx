@@ -86,42 +86,67 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
             coeff = 8 * field[j][i]
             
             # Track the number of boundary neighbors
-            bn = 0
+            neighbors = 0
+            boundary_neighbors = 0
 
             if nj >= 0 and nj <= height:
                 
                 if mask[nj][ni] == 0:
-                    bn += 1
+                    boundary_neighbors += 1
                     coeff += 2 * reference[nj][ni]
                 else:
+                    neighbors += 1
                     coeff -= 2 * field[nj][ni]
+                    
+                    # Check if any neighbors are zero
+                    for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                        if mask[nj + jj][ni + ii] == 0:
+                            coeff += 4 * reference[nj][ni]
 
             if sj >= 0 and sj <= height:
 
                 if mask[sj][si] == 0:
-                    bn += 1
+                    boundary_neighbors += 1
                     coeff += 2 * reference[sj][si]
                 else:
+                    neighbors += 1
                     coeff -= 2 * field[sj][si]
+                    
+                    # Check if any neighbors are zero
+                    for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                        if mask[sj + jj][si + ii] == 0:
+                            coeff += 4 * reference[sj][si]
 
             if ei >= 0 and ei <= width:
 
                 if mask[ej][ei] == 0:
-                    bn += 1
+                    boundary_neighbors += 1
                     coeff += 2 * reference[ej][ei]
                 else:
+                    neighbors += 1
                     coeff -= 2 * field[ej][ei]
+                    
+                    # Check if any neighbors are zero
+                    for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                        if mask[ej + jj][ei + ii] == 0:
+                            coeff += 4 * reference[ej][ei]
             
             if wi >= 0 and wi <= width:
 
                 if mask[wj][wi] == 0:
-                    bn += 1
+                    boundary_neighbors += 1
                     coeff += 2 * reference[wj][wi]
                 else:
+                    neighbors += 1
                     coeff -= 2 * field[wj][wi]
+                    
+                    # Check if any neighbors are zero
+                    for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                        if mask[wj + jj][wi + ii] == 0:
+                            coeff += 4 * reference[wj][wi]
             
-            if bn > 0:
-                coeff -= ((2 * bn + 8) * reference[j][i])
+            if boundary_neighbors > 0:
+                coeff -= ((2 * neighbors + 8) * reference[j][i])
 
             # Assign the value to the output vector
             vector[idx] = coeff
