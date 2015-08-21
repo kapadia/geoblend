@@ -53,7 +53,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
     assert reference.shape[0] == height
     assert reference.shape[1] == width
 
-    cdef int nj, ni, ej, ei, sj, si, wj, wi
+    cdef int nj, ni, ej, ei, sj, si, wj, wi, bn
     cdef int idx = 0
     cdef int coeff
 
@@ -84,10 +84,14 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
             # at the index of the pixel.
 
             coeff = 8 * field[j][i]
+            
+            # Track the number of boundary neighbors
+            bn = 0
 
             if nj >= 0 and nj <= height:
-
+                
                 if mask[nj][ni] == 0:
+                    bn += 1
                     coeff += 2 * reference[nj][ni]
                 else:
                     coeff -= 2 * field[nj][ni]
@@ -95,6 +99,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
             if sj >= 0 and sj <= height:
 
                 if mask[sj][si] == 0:
+                    bn += 1
                     coeff += 2 * reference[sj][si]
                 else:
                     coeff -= 2 * field[sj][si]
@@ -102,6 +107,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
             if ei >= 0 and ei <= width:
 
                 if mask[ej][ei] == 0:
+                    bn += 1
                     coeff += 2 * reference[ej][ei]
                 else:
                     coeff -= 2 * field[ej][ei]
@@ -109,9 +115,13 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
             if wi >= 0 and wi <= width:
 
                 if mask[wj][wi] == 0:
+                    bn += 1
                     coeff += 2 * reference[wj][wi]
                 else:
                     coeff -= 2 * field[wj][wi]
+            
+            if bn > 0:
+                coeff -= ((2 * bn + 8) * reference[j][i])
 
             # Assign the value to the output vector
             vector[idx] = coeff
