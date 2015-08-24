@@ -2,10 +2,8 @@
 import click
 import numpy as np
 from scipy import sparse
-<<<<<<< HEAD
-=======
 from scipy.ndimage import convolve
->>>>>>> 98ce35f... new stategy for rhs vector
+
 import pyamg
 from pyamg.relaxation.smoothing import change_smoothers
 import rasterio as rio
