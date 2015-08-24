@@ -2,6 +2,10 @@
 import click
 import numpy as np
 from scipy import sparse
+<<<<<<< HEAD
+=======
+from scipy.ndimage import convolve
+>>>>>>> 98ce35f... new stategy for rhs vector
 import pyamg
 from pyamg.relaxation.smoothing import change_smoothers
 import rasterio as rio
@@ -17,6 +21,29 @@ from geoblend.blend import load_levels
 @click.group()
 def geoblend():
     pass
+
+
+def create_vector(mask, source, reference):
+
+    indices = np.nonzero(mask)
+    
+    selem = np.array([
+        [0, -1, 0],
+        [-1, 4, -1],
+        [0, -1, 0]
+    ])
+
+    m = convolve(mask.astype(np.float), selem)
+    m[m < 0] = 0
+    m[m > 0] = 1
+    bindices = np.nonzero(m)
+
+    shape = source.shape
+    operator = pyamg.gallery.poisson(shape)
+    field = (operator * source.ravel()).reshape(shape)
+    field[bindices] = reference[bindices]
+
+    return field[indices]
 
 
 @click.command('poisson')
@@ -67,8 +94,7 @@ def poisson(srcpath, refpath, dstpath, matrix):
                     reference = ref.read(bidx)
                     
                     field = (operator * source.ravel()).reshape(shape).astype(np.int32)
-
-                    vector = b(mask, field, reference).astype('float64')
+                    vector = create_vector(mask, source, reference).astype('float64')
 
                     x0 = source[indices].astype('float64')
                     pixels = np.round(ml.solve(b=vector, x0=x0, tol=1e-16))
@@ -108,6 +134,7 @@ def create_solver(srcpath, dstpath):
 
 geoblend.add_command(poisson)
 geoblend.add_command(create_solver)
+
 
 if __name__ == '__main__':
     geoblend()
