@@ -10,11 +10,13 @@ DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
 DTYPE_UINT16 = np.uint16
 DTYPE_INT32 = np.int32
+DTYPE_FLOAT = np.float
 
 ctypedef np.int8_t DTYPE_INT8_t
 ctypedef np.uint8_t DTYPE_UINT8_t
 ctypedef np.uint16_t DTYPE_UINT16_t
 ctypedef np.int32_t DTYPE_INT32_t
+ctypedef np.float_t DTYPE_FLOAT_t
 
 
 def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] field, np.ndarray[DTYPE_UINT16_t, ndim=2] reference):
@@ -48,12 +50,12 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
     cdef int height = mask.shape[0]
     cdef int width = mask.shape[1]
 
-    assert field.shape[0] == height
-    assert field.shape[1] == width
-    assert reference.shape[0] == height
-    assert reference.shape[1] == width
+    # assert field.shape[0] == height
+    # assert field.shape[1] == width
+    # assert reference.shape[0] == height
+    # assert reference.shape[1] == width
 
-    cdef int nj, ni, ej, ei, sj, si, wj, wi, bn
+    cdef int nj, ni, ej, ei, sj, si, wj, wi, neighbors, boundary_neighbors, jj, ii
     cdef int idx = 0
     cdef int coeff
 
@@ -61,7 +63,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
     #       reduced if needed, by sacrificing modularity and combining
     #       these functions.
     cdef int n = np.count_nonzero(mask)
-    cdef np.ndarray[DTYPE_INT32_t, ndim=1] vector = np.zeros(n, dtype=np.int32)
+    cdef np.ndarray[DTYPE_FLOAT_t, ndim=1] vector = np.zeros(n, dtype=np.float)
 
     # TODO: nogil shiz?
     for j in range(height):
@@ -96,7 +98,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     coeff += 2 * reference[nj][ni]
                 else:
                     neighbors += 1
-                    coeff -= 2 * field[nj][ni]
+                    coeff -= 2 * (field[j][i] - field[nj][ni])
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
@@ -111,7 +113,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     coeff += 2 * reference[sj][si]
                 else:
                     neighbors += 1
-                    coeff -= 2 * field[sj][si]
+                    coeff -= 2 * (field[j][i] - field[sj][si])
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
@@ -126,7 +128,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     coeff += 2 * reference[ej][ei]
                 else:
                     neighbors += 1
-                    coeff -= 2 * field[ej][ei]
+                    coeff -= 2 * (field[j][i] - field[ej][ei])
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
@@ -141,7 +143,7 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                     coeff += 2 * reference[wj][wi]
                 else:
                     neighbors += 1
-                    coeff -= 2 * field[wj][wi]
+                    coeff -= 2 * (field[j][i] - field[wj][wi])
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
