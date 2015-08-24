@@ -11,48 +11,12 @@ from pyamg.relaxation.smoothing import change_smoothers
 
 import rasterio as rio
 
-from boundary_conditions import dirichlet
 from utilities import *
 from geoblend import *
-from coefficient_matrix import create_coefficient_matrix, create_multilevel_solver
+from geoblend.coefficients import matrix_from_mask
+from geoblend.solver import create_multilevel_solver, load_multilevel_solver
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
-
-
-def load_levels(f):
-    
-    class level:
-    
-        def __init__(self):
-            pass
-    
-    
-    def load_level(item):
-    
-        l = level()
-        for key, value in item.iteritems():
-        
-            if key == 'presmoother':
-                continue
-            
-            if type(value) is np.ndarray:
-                arr = value
-            else:
-                matrix_func_name = "%s_matrix" % value["format"]
-                matrix_func = getattr(sparse, matrix_func_name)
-                arr = matrix_func((
-                    value["data"],
-                    value["indices"],
-                    value["indptr"]),
-                    shape=value["shape"]
-                )
-        
-            setattr(l, key, arr)
-    
-        return l
-    
-    data = np.load(f)
-    return map(load_level, data["levels"])
 
 
 @dirichlet
