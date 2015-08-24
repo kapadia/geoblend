@@ -5,7 +5,6 @@
 import numpy as np
 cimport numpy as np
 
-
 DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
 DTYPE_UINT16 = np.uint16
@@ -50,10 +49,10 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
     cdef int height = mask.shape[0]
     cdef int width = mask.shape[1]
 
-    # assert field.shape[0] == height
-    # assert field.shape[1] == width
-    # assert reference.shape[0] == height
-    # assert reference.shape[1] == width
+    assert field.shape[0] == height
+    assert field.shape[1] == width
+    assert reference.shape[0] == height
+    assert reference.shape[1] == width
 
     cdef int nj, ni, ej, ei, sj, si, wj, wi, neighbors, boundary_neighbors, jj, ii
     cdef int idx = 0
@@ -81,13 +80,10 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
             # Keep a running variable that represents the
             # element of the vector. This will be assigned
             # to the array at the end.
+            coeff = 0
 
-            # The major value is the value of the guidance field
-            # at the index of the pixel.
-
-            coeff = 8 * field[j][i]
-            
             # Track the number of boundary neighbors
+            # TODO: Only track one of these. The other is 4 - N.
             neighbors = 0
             boundary_neighbors = 0
 
@@ -96,9 +92,10 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                 if mask[nj][ni] == 0:
                     boundary_neighbors += 1
                     coeff += 2 * reference[nj][ni]
+                    coeff -= 2 * field[nj][ni]
                 else:
                     neighbors += 1
-                    coeff -= 2 * (field[j][i] - field[nj][ni])
+                    coeff -= 4 * field[nj][ni]
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
@@ -111,9 +108,10 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                 if mask[sj][si] == 0:
                     boundary_neighbors += 1
                     coeff += 2 * reference[sj][si]
+                    coeff -= 2 * field[sj][si]
                 else:
                     neighbors += 1
-                    coeff -= 2 * (field[j][i] - field[sj][si])
+                    coeff -= 4 * field[sj][si]
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
@@ -126,9 +124,10 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                 if mask[ej][ei] == 0:
                     boundary_neighbors += 1
                     coeff += 2 * reference[ej][ei]
+                    coeff -= 2 * field[ej][ei]
                 else:
                     neighbors += 1
-                    coeff -= 2 * (field[j][i] - field[ej][ei])
+                    coeff -= 4 * field[ej][ei]
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
@@ -141,15 +140,21 @@ def b(np.ndarray[DTYPE_UINT8_t, ndim=2] mask, np.ndarray[DTYPE_INT32_t, ndim=2] 
                 if mask[wj][wi] == 0:
                     boundary_neighbors += 1
                     coeff += 2 * reference[wj][wi]
+                    
+                    coeff -= 2 * field[wj][wi]
                 else:
                     neighbors += 1
-                    coeff -= 2 * (field[j][i] - field[wj][wi])
+                    coeff -= 4 * field[wj][wi]
                     
                     # Check if any neighbors are zero
                     for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
                         if mask[wj + jj][wi + ii] == 0:
                             coeff += 4 * reference[wj][wi]
                             break
+            
+            # The major values are the guidance field and
+            # boundary condition at the pixel (i, j).
+            coeff += (2 * neighbors + 8) * field[j][i]
             
             if boundary_neighbors > 0:
                 coeff -= ((2 * neighbors + 8) * reference[j][i])
