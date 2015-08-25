@@ -71,8 +71,7 @@ def test_matrix_from_mask_rectangular():
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -4, 0, 0, 0, 0, 0, 0, -4, 12]
     ])
 
-    data, row, col, height, width = matrix_from_mask(mask)
-    m = sparse.csr_matrix((data, (row, col)), shape=(height, width)).toarray()
+    m = matrix_from_mask(mask).toarray()
 
     assert np.all(expected == m)
 
@@ -117,8 +116,7 @@ def test_matrix_from_mask():
         [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, -4,  0,  0, -4, 12]
     ])
 
-    data, row, col, height, width = matrix_from_mask(mask)
-    m = sparse.csr_matrix((data, (row, col)), shape=(height, width)).toarray()
+    m = matrix_from_mask(mask).toarray()
 
     assert np.all(expected == m)
 
@@ -162,7 +160,6 @@ def test_matrix_from_mask_big():
     matrix_path = os.path.join(TEST_DIR, 'fixtures', 'mat.npy')
     expected = np.load(matrix_path)
 
-    data, row, col, height, width = matrix_from_mask(mask)
-    m = sparse.csr_matrix((data, (row, col)), shape=(height, width)).toarray()
+    m = matrix_from_mask(mask).toarray()
 
     assert np.all(expected == m)
