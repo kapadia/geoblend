@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.sparse import csr_matrix
 cimport numpy as np
 
 
@@ -26,7 +27,6 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
         of valid pixels in an image. The mask should be
         typed to uint8.
 
-    .. todo:: Support masks that represent the rectangular image case.
     .. todo:: Support valid pixels on the edge of the mask. Currently,
               padding is required between valid data and the mask edge.
     """
@@ -145,7 +145,9 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
             # Increment the equation index
             cidx += 1
             eidx += 1
-    
-    # Return a slice since the allocation was an approximation
-    return data[0:cidx], row[0:cidx], col[0:cidx], n, n
+
+    return csr_matrix((data[0:cidx], (row[0:cidx], col[0:cidx])), shape=(n, n))
+
+    # # Return a slice since the allocation was an approximation
+    # return data[0:cidx], row[0:cidx], col[0:cidx], n, n
 
