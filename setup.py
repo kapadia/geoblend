@@ -37,14 +37,15 @@ setup(name='geoblend',
           'click',
           'rasterio',
           'pyamg',
-          'shapely',
           'scipy',
-          'scikit-image'
+          'scikit-image',
+          'numba'
       ],
       extras_require={
           'test': ['pytest'],
           'development': [
-              'cython==0.23.0'
+              'cython>=0.23.0',
+              'benchmark'
           ]
       },
       entry_points="""
