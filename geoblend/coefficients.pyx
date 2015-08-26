@@ -1,15 +1,14 @@
 
+from __future__ import division
 import numpy as np
-from scipy.sparse import csr_matrix
 cimport numpy as np
+cimport cython
 
 
-DTYPE_INT8 = np.int8
 DTYPE_UINT8 = np.uint8
 DTYPE_INT32 = np.int32
 DTYPE_UINT32 = np.uint32
 
-ctypedef np.int8_t DTYPE_INT8_t
 ctypedef np.uint8_t DTYPE_UINT8_t
 ctypedef np.int32_t DTYPE_INT32_t
 ctypedef np.uint32_t DTYPE_UINT32_t
@@ -33,8 +32,8 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
 
     assert mask.dtype == DTYPE_UINT8
 
-    cdef int height = mask.shape[0]
-    cdef int width = mask.shape[1]
+    cdef unsigned int height = mask.shape[0]
+    cdef unsigned int width = mask.shape[1]
 
     # Equation index and coefficient index
     cdef int eidx = 0
@@ -48,14 +47,15 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
     # Another approach is to be generous when allocating the row/column/data
     # arrays by using the upper bound for the number of coefficients.
     # For N unknown pixels, there are at most 5 * N coefficients.
-    cdef int n = np.count_nonzero(mask)
-    cdef int n_coeff = 5 * n
+    cdef unsigned int n = np.count_nonzero(mask)
+    cdef unsigned int n_coeff = 5 * n
 
     cdef np.ndarray[DTYPE_UINT32_t, ndim=1] row = np.zeros(n_coeff, dtype=np.uint32)
     cdef np.ndarray[DTYPE_UINT32_t, ndim=1] col = np.zeros(n_coeff, dtype=np.uint32)
     cdef np.ndarray[DTYPE_INT32_t, ndim=1] data = np.zeros(n_coeff, dtype=np.int32)
-    
-    cdef int i, j, ii, neighbors, nj, ni, ej, ei, sj, si, wj, wi, offset
+
+    cdef unsigned int i, j, ii, nj, ni, sj, si, ej, ei, wj, wi, neighbors
+    cdef int offset
 
     for j in range(height):
         for i in range(width):
@@ -66,12 +66,19 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
             neighbors = 0
 
             # Define indices of 4-connected neighbors
-            nj, ni = j - 1, i
-            sj, si = j + 1, i
-            ej, ei = j, i + 1
-            wj, wi = j, i - 1
+            nj = <unsigned int>(j - 1)
+            ni = <unsigned int>(i)
 
-            if nj >= 0 and nj <= height:
+            sj = <unsigned int>(j + 1)
+            si = <unsigned int>(i)
+
+            ej = <unsigned int>(j)
+            ei = <unsigned int>(i + 1)
+
+            wj = <unsigned int>(j)
+            wi = <unsigned int>(i - 1)
+
+            if nj <= height:
 
                 if mask[nj][ni] == 1:
 
@@ -94,7 +101,7 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
                 
                     cidx += 1
 
-            if sj >= 0 and sj <= height:
+            if sj <= height:
 
                 if mask[sj][si] == 1:
 
@@ -114,7 +121,7 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
 
                     cidx += 1
 
-            if ei >= 0 and ei <= width:
+            if ei <= width:
 
                 if mask[ej][ei] == 1:
 
@@ -126,7 +133,7 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
                 
                     cidx += 1
             
-            if wi >= 0 and wi <= width:
+            if wi <= width:
 
                 if mask[wj][wi] == 1:
 
@@ -146,8 +153,6 @@ def matrix_from_mask(np.ndarray[DTYPE_UINT8_t, ndim=2] mask):
             cidx += 1
             eidx += 1
 
-    return csr_matrix((data[0:cidx], (row[0:cidx], col[0:cidx])), shape=(n, n))
-
-    # # Return a slice since the allocation was an approximation
-    # return data[0:cidx], row[0:cidx], col[0:cidx], n, n
+    # Return a slice since the allocation was an approximation
+    return data[0:cidx], row[0:cidx], col[0:cidx], n, n
 
