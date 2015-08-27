@@ -7,7 +7,7 @@ from geoblend.vector import create_vector
 
 
 
-@jit()
+@jit("void(u1[:,:])")
 def matrix_from_mask_numba(mask):
 
     height, width = mask.shape
