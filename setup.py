@@ -39,6 +39,7 @@ setup(name='geoblend',
           'rasterio',
           'pyamg',
           'scipy',
+          'scikit-image'
       ],
       extras_require={
           'test': ['pytest'],
