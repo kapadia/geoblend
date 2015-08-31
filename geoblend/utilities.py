@@ -1,7 +1,9 @@
 
 import numpy as np
 import rasterio as rio
-from skimage.morphology import binary_erosion, square
+from skimage.morphology import binary_erosion, square, convex_hull_image, disk
+from skimage.filters import gaussian_filter
+# from scipy.ndimage.filters import gaussian_filter
 
 
 def get_mask(srcpath):
@@ -19,13 +21,14 @@ def get_mask(srcpath):
             count = src.count
 
             if count < 4:
-                mask = np.ones_like(src.shape)
+                mask = np.ones(src.shape)
                 mask[0, :] = 0
                 mask[-1, :] = 0
                 mask[:, 0] = 0
                 mask[:, -1] = 0
             else:
-                mask = src.read(4)
-                return binary_erosion(mask, square(4)).astype(np.uint8)
+                mask = src.read(4).astype(np.uint8)
+                mask[np.nonzero(mask)] = 1
+                mask = binary_erosion(convex_hull_image(mask), disk(3)).astype(np.uint8)
 
     return mask
