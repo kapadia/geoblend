@@ -6,8 +6,9 @@ from scipy.sparse import csr_matrix
 from geoblend.vector import create_vector
 
 
-@jit('void(u1[:, :])')
-def create_vector_numba(mask):
+@jit()
+def create_vector_numba(source, reference, mask):
+    print("create_vector_numba")
 
     height, width = mask.shape
 
@@ -32,83 +33,21 @@ def create_vector_numba(mask):
             # to the array at the end.
             coeff = 0
 
-            # Track the number of boundary neighbors
-            # TODO: Only track one of these. The other is 4 - N.
-            neighbors = 0
-            boundary_neighbors = 0
+            coeff += 4 * (source[j][i] - source[nj][ni])
+            if mask[nj][ni] == 0:
+                coeff += 2 * reference[nj][ni]
 
-            # TODO: Avoid this check by changing starting/ending indices to (1, n - 1)
-            if nj >= 0 and nj <= height:
+            coeff += 4 * (source[j][i] - source[sj][si])
+            if mask[sj][si] == 0:
+                coeff += 2 * reference[sj][si]
 
-                if mask[nj][ni] == 0:
-                    boundary_neighbors += 1
-                    coeff += 2 * reference[nj][ni]
-                    coeff -= 2 * field[nj][ni]
-                else:
-                    neighbors += 1
-                    coeff -= 4 * field[nj][ni]
+            coeff += 4 * (source[j][i] - source[ej][ei])
+            if mask[ej][ei] == 0:
+                coeff += 2 * reference[ej][ei]
 
-                    # # Check if any neighbors are zero
-                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
-                    #     if mask[nj + jj][ni + ii] == 0:
-                    #         coeff += 4 * reference[nj][ni]
-                    #         break
-
-            if sj >= 0 and sj <= height:
-
-                if mask[sj][si] == 0:
-                    boundary_neighbors += 1
-                    coeff += 2 * reference[sj][si]
-                    coeff -= 2 * field[sj][si]
-                else:
-                    neighbors += 1
-                    coeff -= 4 * field[sj][si]
-
-                    # # Check if any neighbors are zero
-                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
-                    #     if mask[sj + jj][si + ii] == 0:
-                    #         coeff += 4 * reference[sj][si]
-                    #         break
-
-            if ei >= 0 and ei <= width:
-
-                if mask[ej][ei] == 0:
-                    boundary_neighbors += 1
-                    coeff += 2 * reference[ej][ei]
-                    coeff -= 2 * field[ej][ei]
-                else:
-                    neighbors += 1
-                    coeff -= 4 * field[ej][ei]
-
-                    # # Check if any neighbors are zero
-                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
-                    #     if mask[ej + jj][ei + ii] == 0:
-                    #         coeff += 4 * reference[ej][ei]
-                    #         break
-
-            if wi >= 0 and wi <= width:
-
-                if mask[wj][wi] == 0:
-                    boundary_neighbors += 1
-                    coeff += 2 * reference[wj][wi]
-
-                    coeff -= 2 * field[wj][wi]
-                else:
-                    neighbors += 1
-                    coeff -= 4 * field[wj][wi]
-
-                    # # Check if any neighbors are zero
-                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
-                    #     if mask[wj + jj][wi + ii] == 0:
-                    #         coeff += 4 * reference[wj][wi]
-                    #         break
-
-            # The major values are the guidance field and
-            # boundary condition at the pixel (i, j).
-            coeff += (2 * neighbors + 8) * field[j][i]
-
-            # if boundary_neighbors > 0:
-            #     coeff -= ((2 * neighbors + 8) * reference[j][i])
+            coeff += 4 * (source[j][i] - source[wj][wi])
+            if mask[wj][wi] == 0:
+                coeff += 2 * reference[wj][wi]
 
             # Assign the value to the output vector
             vector[idx] = coeff
@@ -240,7 +179,7 @@ def matrix_from_mask_numba(mask):
     return csr_matrix((data[0:cidx], (row[0:cidx], col[0:cidx])), shape=(n, n))
 
 
-def blend(source, reference, mask, operator, solver):
+def blend(source, reference, mask, solver):
     """
     Run a Poisson blend between two arrays.
     
@@ -250,18 +189,13 @@ def blend(source, reference, mask, operator, solver):
         ndarray representing the reference image
     :param mask:
         ndarray representing the mask
-    :param operator:
-        ndarray representing an operator that is applied over
-        the source image. This is usually a gradient operator,
-        though, others may be used.
     :param solver:
         A precomputed multilevel solver.
     """
 
     indices = np.nonzero(mask)
 
-    field = (operator * source.ravel()).reshape(source.shape)
-    vector = create_vector(field, reference, mask)
+    vector = create_vector_numba(source.astype(np.float64), reference.astype(np.float64), mask)
 
     x0 = source[indices].astype('float64')
     pixels = np.round(solver.solve(b=vector, x0=x0, tol=1e-05, accel='cg'))
