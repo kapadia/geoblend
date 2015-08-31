@@ -6,6 +6,116 @@ from scipy.sparse import csr_matrix
 from geoblend.vector import create_vector
 
 
+@jit('void(u1[:, :])')
+def create_vector_numba(mask):
+
+    height, width = mask.shape
+
+    n = np.count_nonzero(mask)
+    vector = np.empty(n, dtype=np.float)
+    idx = 0
+
+    for j in range(height):
+        for i in range(width):
+
+            if mask[j][i] == 0:
+                continue
+
+            # Define indices of 4-connected neighbors
+            nj, ni = j - 1, i
+            sj, si = j + 1, i
+            ej, ei = j, i + 1
+            wj, wi = j, i - 1
+
+            # Keep a running variable that represents the
+            # element of the vector. This will be assigned
+            # to the array at the end.
+            coeff = 0
+
+            # Track the number of boundary neighbors
+            # TODO: Only track one of these. The other is 4 - N.
+            neighbors = 0
+            boundary_neighbors = 0
+
+            # TODO: Avoid this check by changing starting/ending indices to (1, n - 1)
+            if nj >= 0 and nj <= height:
+
+                if mask[nj][ni] == 0:
+                    boundary_neighbors += 1
+                    coeff += 2 * reference[nj][ni]
+                    coeff -= 2 * field[nj][ni]
+                else:
+                    neighbors += 1
+                    coeff -= 4 * field[nj][ni]
+
+                    # # Check if any neighbors are zero
+                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                    #     if mask[nj + jj][ni + ii] == 0:
+                    #         coeff += 4 * reference[nj][ni]
+                    #         break
+
+            if sj >= 0 and sj <= height:
+
+                if mask[sj][si] == 0:
+                    boundary_neighbors += 1
+                    coeff += 2 * reference[sj][si]
+                    coeff -= 2 * field[sj][si]
+                else:
+                    neighbors += 1
+                    coeff -= 4 * field[sj][si]
+
+                    # # Check if any neighbors are zero
+                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                    #     if mask[sj + jj][si + ii] == 0:
+                    #         coeff += 4 * reference[sj][si]
+                    #         break
+
+            if ei >= 0 and ei <= width:
+
+                if mask[ej][ei] == 0:
+                    boundary_neighbors += 1
+                    coeff += 2 * reference[ej][ei]
+                    coeff -= 2 * field[ej][ei]
+                else:
+                    neighbors += 1
+                    coeff -= 4 * field[ej][ei]
+
+                    # # Check if any neighbors are zero
+                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                    #     if mask[ej + jj][ei + ii] == 0:
+                    #         coeff += 4 * reference[ej][ei]
+                    #         break
+
+            if wi >= 0 and wi <= width:
+
+                if mask[wj][wi] == 0:
+                    boundary_neighbors += 1
+                    coeff += 2 * reference[wj][wi]
+
+                    coeff -= 2 * field[wj][wi]
+                else:
+                    neighbors += 1
+                    coeff -= 4 * field[wj][wi]
+
+                    # # Check if any neighbors are zero
+                    # for jj, ii in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                    #     if mask[wj + jj][wi + ii] == 0:
+                    #         coeff += 4 * reference[wj][wi]
+                    #         break
+
+            # The major values are the guidance field and
+            # boundary condition at the pixel (i, j).
+            coeff += (2 * neighbors + 8) * field[j][i]
+
+            # if boundary_neighbors > 0:
+            #     coeff -= ((2 * neighbors + 8) * reference[j][i])
+
+            # Assign the value to the output vector
+            vector[idx] = coeff
+            idx += 1
+
+    return vector
+
 
 @jit("void(u1[:,:])")
 def matrix_from_mask_numba(mask):
