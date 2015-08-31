@@ -9,7 +9,6 @@ from pyamg.relaxation.smoothing import change_smoothers
 
 from geoblend import blend, matrix_from_mask_numba
 from geoblend.utilities import get_mask
-# from geoblend.coefficients import matrix_from_mask
 from geoblend.solver import create_multilevel_solver, load_multilevel_solver
 
 
@@ -47,7 +46,6 @@ def poisson(srcpath, refpath, dstpath, matrix):
                 ml = pyamg.smoothed_aggregation_solver(mat, v, max_coarse=10)
 
             shape = src.shape
-            operator = pyamg.gallery.poisson(shape)
 
             with rio.open(dstpath, 'w', **profile) as dst:
 
@@ -56,7 +54,7 @@ def poisson(srcpath, refpath, dstpath, matrix):
                     source = src.read(bidx)
                     reference = ref.read(bidx)
 
-                    arr = blend(source, reference, mask, operator, ml)
+                    arr = blend(source, reference, mask, ml)
                     dst.write_band(bidx, arr)
 
 
