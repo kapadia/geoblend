@@ -22,38 +22,29 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     :param reference:
         The reference image that will be used to sample for the boundary
         conditions.
-    
-    .. todo:: The guidance field passed has thus far been an approximation of
-              the gradient. A more precise representation may be calculated here
-              if the source image is passed. Plus it will save the loop required
-              when convolving the source image to find the gradient field.
-
-    .. todo:: Can field be Int16?
     """
 
     cdef int height = mask.shape[0]
     cdef int width = mask.shape[1]
+    
+    cdef int i, j
+    cdef unsigned int nj, ni, sj, si, ej, ei, wj, wi
+    cdef unsigned int idx = 0
+    cdef double coeff, s
+
+    cdef int n = np.count_nonzero(mask)
+    cdef double[:] vector = np.empty(n, dtype=np.float64)
 
     assert source.shape[0] == height
     assert source.shape[1] == width
     assert reference.shape[0] == height
     assert reference.shape[1] == width
 
-    cdef int nj, ni, ej, ei, sj, si, wj, wi
-    cdef int idx = 0
-    cdef double coeff
-
-    # TODO: This value is also needed by matrix_from_mask. Loops can be
-    #       reduced if needed, by sacrificing modularity and combining
-    #       these functions.
-    cdef int n = np.count_nonzero(mask)
-    cdef np.ndarray[DTYPE_FLOAT_t, ndim=1] vector = np.zeros(n, dtype=np.float)
-
     # TODO: nogil shiz?
     for j in range(height):
         for i in range(width):
 
-            if mask[j][i] == 0:
+            if mask[j, i] == 0:
                 continue
 
             # Define indices of 4-connected neighbors
@@ -65,27 +56,28 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
             # Keep a running variable that represents the
             # element of the vector. This will be assigned
             # to the array at the end.
-            coeff = 0
+            coeff = 0.0
+            s = source[j, i]
 
-            coeff += 4 * (source[j][i] - source[nj][ni])
-            if mask[nj][ni] == 0:
-                coeff += 2 * reference[nj][ni]
+            coeff += 4 * (s - source[nj, ni])
+            if mask[nj, ni] == 0:
+                coeff += 2 * reference[nj, ni]
 
-            coeff += 4 * (source[j][i] - source[sj][si])
-            if mask[sj][si] == 0:
-                coeff += 2 * reference[sj][si]
+            coeff += 4 * (s - source[sj, si])
+            if mask[sj, si] == 0:
+                coeff += 2 * reference[sj, si]
 
-            coeff += 4 * (source[j][i] - source[ej][ei])
-            if mask[ej][ei] == 0:
-                coeff += 2 * reference[ej][ei]
+            coeff += 4 * (s - source[ej, ei])
+            if mask[ej, ei] == 0:
+                coeff += 2 * reference[ej, ei]
 
-            coeff += 4 * (source[j][i] - source[wj][wi])
-            if mask[wj][wi] == 0:
-                coeff += 2 * reference[wj][wi]
+            coeff += 4 * (s - source[wj, wi])
+            if mask[wj, wi] == 0:
+                coeff += 2 * reference[wj, wi]
 
             # Assign the value to the output vector
             vector[idx] = coeff
             idx += 1
 
 
-    return vector
+    return np.asarray(vector)
