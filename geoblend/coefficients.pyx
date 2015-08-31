@@ -1,15 +1,13 @@
 
-from __future__ import division
 import numpy as np
 cimport numpy as np
 from scipy.sparse import csr_matrix
 cimport cython
-from cython.parallel cimport prange
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def matrix_from_mask_fast(char[:, ::1] mask):
+def matrix_from_mask(char[:, ::1] mask):
     """
     Create the coefficient matrix corresponding to the
     linearized Poisson problem. This function uses a mapping
@@ -55,7 +53,7 @@ def matrix_from_mask_fast(char[:, ::1] mask):
     for j in range(height):
         for i in range(width):
 
-            if mask[j][i] == 0:
+            if mask[j, i] == 0:
                 continue
 
             neighbors = 0
@@ -75,7 +73,7 @@ def matrix_from_mask_fast(char[:, ::1] mask):
 
             if nj <= height:
 
-                if mask[nj][ni] == 1:
+                if mask[nj, ni] == 1:
 
                     neighbors += 1
 
@@ -84,10 +82,10 @@ def matrix_from_mask_fast(char[:, ::1] mask):
                     # BT-dubs - this is less efficient than I'd prefer.
                     offset = 0
                     for ii in range(ni, width):
-                        if mask[nj][ii] == 1:
+                        if mask[nj, ii] == 1:
                             offset += 1
                     for ii in range(0, i):
-                        if mask[j][ii] == 1:
+                        if mask[j, ii] == 1:
                             offset += 1
 
                     row[cidx] = eidx
@@ -98,16 +96,16 @@ def matrix_from_mask_fast(char[:, ::1] mask):
 
             if sj <= height:
 
-                if mask[sj][si] == 1:
+                if mask[sj, si] == 1:
 
                     neighbors += 1
 
                     offset = 0
                     for ii in range(i, width):
-                        if mask[j][ii] == 1:
+                        if mask[j, ii] == 1:
                             offset += 1
                     for ii in range(0, si):
-                        if mask[sj][ii] == 1:
+                        if mask[sj, ii] == 1:
                             offset += 1
 
                     row[cidx] = eidx
@@ -118,7 +116,7 @@ def matrix_from_mask_fast(char[:, ::1] mask):
 
             if ei <= width:
 
-                if mask[ej][ei] == 1:
+                if mask[ej, ei] == 1:
 
                     neighbors += 1
 
@@ -130,7 +128,7 @@ def matrix_from_mask_fast(char[:, ::1] mask):
 
             if wi <= width:
 
-                if mask[wj][wi] == 1:
+                if mask[wj, wi] == 1:
 
                     neighbors += 1
 
