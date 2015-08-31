@@ -18,7 +18,7 @@ ext_options = {
 extensions = [
     Extension('geoblend.coefficients', ['geoblend/coefficients.pyx'], **ext_options),
     Extension('geoblend.coeffs_fast', ['geoblend/coeffs_fast.pyx'], **ext_options),
-    Extension('geoblend.vector_fast', ['geoblend/vector.pyx'], **ext_options)
+    Extension('geoblend.vector', ['geoblend/vector.pyx'], **ext_options)
 ]
 
 setup(name='geoblend',
