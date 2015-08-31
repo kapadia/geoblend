@@ -1,9 +1,7 @@
 
 import numpy as np
 import rasterio as rio
-from skimage.morphology import binary_erosion, square, convex_hull_image, disk
-from skimage.filters import gaussian_filter
-# from scipy.ndimage.filters import gaussian_filter
+from skimage.morphology import binary_erosion, disk
 
 
 def get_mask(srcpath):
@@ -27,8 +25,8 @@ def get_mask(srcpath):
                 mask[:, 0] = 0
                 mask[:, -1] = 0
             else:
-                mask = src.read(4).astype(np.uint8)
+                mask = src.read(4)
                 mask[np.nonzero(mask)] = 1
-                mask = binary_erosion(convex_hull_image(mask), disk(3)).astype(np.uint8)
+                mask = binary_erosion(mask, disk(3)).astype(np.uint8)
 
     return mask
