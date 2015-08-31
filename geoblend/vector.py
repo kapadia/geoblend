@@ -11,8 +11,7 @@ def create_vector(field, reference, mask):
     the gradient of the source image and the boundaries of the
     reference image.
 
-    .. todo:: Input a field instead of the source image. This will prevent
-              the same operator from being generated multiple times.
+    .. todo:: Current implementation results in something wacky.
     """
 
     indices = np.nonzero(mask)
