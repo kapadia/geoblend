@@ -21,6 +21,8 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     :param reference:
         The reference image that will be used to sample for the boundary
         conditions.
+
+    .. todo:: source and reference may be uint16, but arthimetic operations need typecasting.
     """
 
     cdef int height = mask.shape[0]
@@ -77,6 +79,5 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
             # Assign the value to the output vector
             vector[idx] = coeff
             idx += 1
-
 
     return np.asarray(vector)
