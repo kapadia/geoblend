@@ -3,15 +3,14 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-DTYPE_FLOAT = np.float
-ctypedef np.float_t DTYPE_FLOAT_t
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] mask):
     """
-    Computes the column vector b from the linearized Poisson equation.
+    Computes the column vector needed to solve the linearized Poisson equation.
+    This vector returned preserves the gradient of the source image. Other functions
+    may be written to preserve other vector fields.
     
     :param mask:
         ndarray where nonzero values represent the region
