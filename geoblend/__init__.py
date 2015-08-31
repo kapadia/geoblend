@@ -6,55 +6,6 @@ from scipy.sparse import csr_matrix
 from geoblend.vector import create_vector
 
 
-@jit()
-def create_vector_numba(source, reference, mask):
-    print("create_vector_numba")
-
-    height, width = mask.shape
-
-    n = np.count_nonzero(mask)
-    vector = np.empty(n, dtype=np.float)
-    idx = 0
-
-    for j in range(height):
-        for i in range(width):
-
-            if mask[j][i] == 0:
-                continue
-
-            # Define indices of 4-connected neighbors
-            nj, ni = j - 1, i
-            sj, si = j + 1, i
-            ej, ei = j, i + 1
-            wj, wi = j, i - 1
-
-            # Keep a running variable that represents the
-            # element of the vector. This will be assigned
-            # to the array at the end.
-            coeff = 0
-
-            coeff += 4 * (source[j][i] - source[nj][ni])
-            if mask[nj][ni] == 0:
-                coeff += 2 * reference[nj][ni]
-
-            coeff += 4 * (source[j][i] - source[sj][si])
-            if mask[sj][si] == 0:
-                coeff += 2 * reference[sj][si]
-
-            coeff += 4 * (source[j][i] - source[ej][ei])
-            if mask[ej][ei] == 0:
-                coeff += 2 * reference[ej][ei]
-
-            coeff += 4 * (source[j][i] - source[wj][wi])
-            if mask[wj][wi] == 0:
-                coeff += 2 * reference[wj][wi]
-
-            # Assign the value to the output vector
-            vector[idx] = coeff
-            idx += 1
-
-    return vector
-
 
 @jit("void(u1[:,:])")
 def matrix_from_mask_numba(mask):
@@ -195,7 +146,7 @@ def blend(source, reference, mask, solver):
 
     indices = np.nonzero(mask)
 
-    vector = create_vector_numba(source.astype(np.float64), reference.astype(np.float64), mask)
+    vector = create_vector(source.astype(np.float64), reference.astype(np.float64), mask)
 
     x0 = source[indices].astype('float64')
     pixels = np.round(solver.solve(b=vector, x0=x0, tol=1e-05, accel='cg'))
