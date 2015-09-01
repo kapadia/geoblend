@@ -2,7 +2,7 @@
 import os
 import numpy as np
 from scipy import sparse
-from geoblend import matrix_from_mask_numba as matrix_from_mask
+from geoblend.coefficients import matrix_from_mask
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
