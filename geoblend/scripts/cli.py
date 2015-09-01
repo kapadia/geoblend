@@ -7,7 +7,8 @@ from scipy import sparse
 import pyamg
 from pyamg.relaxation.smoothing import change_smoothers
 
-from geoblend import blend, matrix_from_mask_numba
+from geoblend import blend
+from geoblend.coefficients import matrix_from_mask
 from geoblend.utilities import get_mask
 from geoblend.solver import create_multilevel_solver, load_multilevel_solver
 
@@ -40,7 +41,7 @@ def poisson(srcpath, refpath, dstpath, matrix):
                 ml = pyamg.multilevel.multilevel_solver(levels, coarse_solver='pinv2')
                 change_smoothers(ml, 'gauss_seidel', 'gauss_seidel')
             else:
-                mat = matrix_from_mask_numba(mask)
+                mat = matrix_from_mask(mask)
 
                 v = np.ones((mat.shape[0], 1))
                 ml = pyamg.smoothed_aggregation_solver(mat, v, max_coarse=10)
@@ -71,9 +72,8 @@ def create_solver(srcpath, dstpath):
 
     with rio.drivers():
         with rio.open(srcpath) as src:
-            mat = matrix_from_mask_numba(mask)
+            mat = matrix_from_mask(mask)
 
-    print mat.shape
     create_multilevel_solver(dstpath, mat)
 
 
