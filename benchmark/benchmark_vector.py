@@ -5,9 +5,7 @@ import numpy as np
 import rasterio as rio
 from skimage.morphology import disk
 
-from geoblend.vector import create_vector as create_vector_slow
-from geoblend import create_vector_numba
-from geoblend.vector_fast import create_vector as create_vector_cython
+from geoblend.vector import create_vector
 
 
 class Benchmark_Vector_Small(benchmark.Benchmark):
@@ -40,13 +38,7 @@ class Benchmark_Vector_Small(benchmark.Benchmark):
         self.mask[y0:y1, x0:x1] = d
 
     def test_cython(self):
-        vector = create_vector_cython(self.source, self.reference, self.mask)
-
-    def test_numba(self):
-        vector = create_vector_numba(self.source, self.reference, self.mask)
-
-    def test_python(self):
-        vector = create_vector_slow(self.source, self.reference, self.mask)
+        vector = create_vector(self.source, self.reference, self.mask)
 
 
 class Benchmark_Vector_Large(benchmark.Benchmark):
@@ -66,10 +58,7 @@ class Benchmark_Vector_Large(benchmark.Benchmark):
             self.reference = ref.read(1).astype(np.float64)
 
     def test_cython(self):
-        vector = create_vector_cython(self.source, self.reference, self.mask)
-
-    def test_numba(self):
-        vector = create_vector_numba(self.source, self.reference, self.mask)
+        vector = create_vector(self.source, self.reference, self.mask)
 
 
 if __name__ == '__main__':
