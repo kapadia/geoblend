@@ -12,7 +12,9 @@ with codecs_open('README.rst', encoding='utf-8') as f:
 
 # Add numpy to include directory for cython compilation
 ext_options = {
-    "include_dirs": [ np.get_include() ]
+    "include_dirs": [ np.get_include() ],
+    "extra_compile_args": [ '-fopenmp' ],
+    "extra_link_args": [ '-fopenmp' ]
 }
 
 extensions = [
