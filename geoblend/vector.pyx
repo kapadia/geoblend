@@ -2,6 +2,8 @@
 import numpy as np
 cimport numpy as np
 cimport cython
+from cython.parallel cimport prange, threadid
+cimport openmp
 
 
 @cython.boundscheck(False)
@@ -29,55 +31,73 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     cdef int width = mask.shape[1]
     
     cdef int i, j
-    cdef unsigned int nj, ni, sj, si, ej, ei, wj, wi
-    cdef unsigned int idx = 0
-    cdef double coeff, s
+
+    cdef int max_threads = openmp.omp_get_max_threads()
+    
+    cdef unsigned int[:] nj = np.empty(max_threads, np.uint32)
+    cdef unsigned int[:] ni = np.empty(max_threads, np.uint32)
+
+    cdef unsigned int[:] sj = np.empty(max_threads, np.uint32)
+    cdef unsigned int[:] si = np.empty(max_threads, np.uint32)
+
+    cdef unsigned int[:] ej = np.empty(max_threads, np.uint32)
+    cdef unsigned int[:] ei = np.empty(max_threads, np.uint32)
+
+    cdef unsigned int[:] wj = np.empty(max_threads, np.uint32)
+    cdef unsigned int[:] wi = np.empty(max_threads, np.uint32)
+    
+    cdef double[:] coeff = np.empty(max_threads, np.float64)
 
     cdef int n = np.count_nonzero(mask)
     cdef double[:] vector = np.empty(n, dtype=np.float64)
+    cdef unsigned long[:] row_sum = np.sum(mask, axis=1)
 
     assert source.shape[0] == height
     assert source.shape[1] == width
     assert reference.shape[0] == height
     assert reference.shape[1] == width
 
-    # TODO: nogil shiz?
-    for j in range(height):
+    for j in prange(height, nogil=True):
         for i in range(width):
 
             if mask[j, i] == 0:
                 continue
-
+            
             # Define indices of 4-connected neighbors
-            nj, ni = j - 1, i
-            sj, si = j + 1, i
-            ej, ei = j, i + 1
-            wj, wi = j, i - 1
+            nj[threadid()] = j - 1
+            ni[threadid()] = i
+
+            sj[threadid()] = j + 1
+            si[threadid()] = i
+
+            ej[threadid()] = j
+            ei[threadid()] = i + 1
+
+            wj[threadid()] = j
+            wi[threadid()] = i - 1
 
             # Keep a running variable that represents the
             # element of the vector. This will be assigned
             # to the array at the end.
-            coeff = 0.0
-            s = source[j, i]
+            coeff[threadid()] = 0.0
 
-            coeff += 4 * (s - source[nj, ni])
-            if mask[nj, ni] == 0:
-                coeff += 2 * reference[nj, ni]
+            coeff[threadid()] += 4 * (source[j, i] - source[nj[threadid()], ni[threadid()]])
+            if mask[nj[threadid()], ni[threadid()]] == 0:
+                coeff[threadid()] += 2 * reference[nj[threadid()], ni[threadid()]]
 
-            coeff += 4 * (s - source[sj, si])
-            if mask[sj, si] == 0:
-                coeff += 2 * reference[sj, si]
+            coeff[threadid()] += 4 * (source[j, i] - source[sj[threadid()], si[threadid()]])
+            if mask[sj[threadid()], si[threadid()]] == 0:
+                coeff[threadid()] += 2 * reference[sj[threadid()], si[threadid()]]
 
-            coeff += 4 * (s - source[ej, ei])
-            if mask[ej, ei] == 0:
-                coeff += 2 * reference[ej, ei]
+            coeff[threadid()] += 4 * (source[j, i] - source[ej[threadid()], ei[threadid()]])
+            if mask[ej[threadid()], ei[threadid()]] == 0:
+                coeff[threadid()] += 2 * reference[ej[threadid()], ei[threadid()]]
 
-            coeff += 4 * (s - source[wj, wi])
-            if mask[wj, wi] == 0:
-                coeff += 2 * reference[wj, wi]
+            coeff[threadid()] += 4 * (source[j, i] - source[wj[threadid()], wi[threadid()]])
+            if mask[wj[threadid()], wi[threadid()]] == 0:
+                coeff[threadid()] += 2 * reference[wj[threadid()], wi[threadid()]]
 
             # Assign the value to the output vector
-            vector[idx] = coeff
-            idx += 1
+            vector[row_sum[j] + i] = coeff[threadid()]
 
     return np.asarray(vector)

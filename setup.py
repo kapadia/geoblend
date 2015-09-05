@@ -1,9 +1,12 @@
 
+import os
 from codecs import open as codecs_open
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Build import cythonize
 import numpy as np
+
+os.environ["CC"] = "/usr/local/Cellar/gcc/5.1.0/bin/gcc-5"
 
 
 # Get the long description from the relevant file
