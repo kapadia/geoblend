@@ -19,7 +19,7 @@ def get_mask(srcpath):
             count = src.count
 
             if count < 4:
-                mask = np.ones(src.shape)
+                mask = np.ones(src.shape, dtype=np.uint8)
                 mask[0, :] = 0
                 mask[-1, :] = 0
                 mask[:, 0] = 0
@@ -27,6 +27,8 @@ def get_mask(srcpath):
             else:
                 mask = src.read(4)
                 mask[np.nonzero(mask)] = 1
-                mask = binary_erosion(mask, disk(3)).astype(np.uint8)
+                print "10"
+                mask = binary_erosion(mask, disk(10)).astype(np.uint8)
+                print "EROSION DONE"
 
     return mask
