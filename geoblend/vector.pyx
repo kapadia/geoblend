@@ -11,16 +11,16 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     Computes the column vector needed to solve the linearized Poisson equation.
     This vector returned preserves the gradient of the source image. Other functions
     may be written to preserve other vector fields.
-    
-    :param mask:
-        ndarray where nonzero values represent the region
-        of valid pixels in an image. The mask should be
-        typed to uint8.
+
     :param source:
         The source image that will have its gradient conserved.
     :param reference:
         The reference image that will be used to sample for the boundary
         conditions.
+    :param mask:
+        ndarray where nonzero values represent the region
+        of valid pixels in an image. The mask should be
+        typed to uint8.
 
     .. todo:: source and reference may be uint16, but arthimetic operations need typecasting.
     """
@@ -59,22 +59,30 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
             # to the array at the end.
             coeff = 0.0
             s = source[j, i]
-
-            coeff += 4 * (s - source[nj, ni])
+            
+            coeff += (s - source[nj, ni])
             if mask[nj, ni] == 0:
-                coeff += 2 * reference[nj, ni]
+                coeff += reference[nj, ni]
+            else:
+                coeff += 4 * (s - source[nj, ni])
 
-            coeff += 4 * (s - source[sj, si])
+            coeff += (s - source[sj, si])
             if mask[sj, si] == 0:
-                coeff += 2 * reference[sj, si]
+                coeff += reference[sj, si]
+            else:
+                coeff += 4 * (s - source[sj, si])
 
-            coeff += 4 * (s - source[ej, ei])
+            coeff += (s - source[ej, ei])
             if mask[ej, ei] == 0:
-                coeff += 2 * reference[ej, ei]
+                coeff += reference[ej, ei]
+            else:
+                coeff += 4 * (s - source[ej, ei])
 
-            coeff += 4 * (s - source[wj, wi])
+            coeff += (s - source[wj, wi])
             if mask[wj, wi] == 0:
-                coeff += 2 * reference[wj, wi]
+                coeff += reference[wj, wi]
+            else:
+                coeff += 4 * (s - source[wj, wi])
 
             # Assign the value to the output vector
             vector[idx] = coeff
