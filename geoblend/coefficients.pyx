@@ -73,7 +73,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
             if nj <= height:
 
-                if mask[nj, ni] == 1:
+                if mask[nj, ni] != 0:
 
                     neighbors += 1
 
@@ -96,7 +96,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
             if sj <= height:
 
-                if mask[sj, si] == 1:
+                if mask[sj, si] != 0:
 
                     neighbors += 1
 
@@ -116,7 +116,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
             if ei <= width:
 
-                if mask[ej, ei] == 1:
+                if mask[ej, ei] != 0:
 
                     neighbors += 1
 
@@ -128,7 +128,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
             if wi <= width:
 
-                if mask[wj, wi] == 1:
+                if mask[wj, wi] != 0:
 
                     neighbors += 1
 
