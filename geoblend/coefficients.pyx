@@ -82,10 +82,10 @@ def matrix_from_mask(char[:, ::1] mask):
                     # BT-dubs - this is less efficient than I'd prefer.
                     offset = 0
                     for ii in range(ni, width):
-                        if mask[nj, ii] == 1:
+                        if mask[nj, ii] != 0:
                             offset += 1
                     for ii in range(0, i):
-                        if mask[j, ii] == 1:
+                        if mask[j, ii] != 0:
                             offset += 1
 
                     row[cidx] = eidx
@@ -102,10 +102,10 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     offset = 0
                     for ii in range(i, width):
-                        if mask[j, ii] == 1:
+                        if mask[j, ii] != 0:
                             offset += 1
                     for ii in range(0, si):
-                        if mask[sj, ii] == 1:
+                        if mask[sj, ii] != 0:
                             offset += 1
 
                     row[cidx] = eidx
