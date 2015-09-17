@@ -90,7 +90,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     row[cidx] = eidx
                     col[cidx] = eidx - offset
-                    data[cidx] = -1
+                    data[cidx] = -4
 
                     cidx += 1
 
@@ -110,7 +110,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     row[cidx] = eidx
                     col[cidx] = eidx + offset
-                    data[cidx] = -1
+                    data[cidx] = -4
 
                     cidx += 1
 
@@ -122,7 +122,7 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     row[cidx] = eidx + 1
                     col[cidx] = eidx
-                    data[cidx] = -1
+                    data[cidx] = -4
 
                     cidx += 1
 
@@ -134,13 +134,13 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     row[cidx] = eidx - 1
                     col[cidx] = eidx
-                    data[cidx] = -1
+                    data[cidx] = -4
 
                     cidx += 1
 
             row[cidx] = eidx
             col[cidx] = eidx
-            data[cidx] = 4
+            data[cidx] = 2 * neighbors + 8
         
             # Increment the equation index
             cidx += 1
