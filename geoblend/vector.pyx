@@ -27,9 +27,8 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
 
     cdef int height = mask.shape[0]
     cdef int width = mask.shape[1]
-    
-    cdef int i, j
-    cdef unsigned int nj, ni, sj, si, ej, ei, wj, wi
+
+    cdef unsigned int i, j, nj, ni, sj, si, ej, ei, wj, wi, neighbors
     cdef unsigned int idx = 0
     cdef double coeff, s
 
@@ -41,48 +40,62 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     assert reference.shape[0] == height
     assert reference.shape[1] == width
 
-    # TODO: nogil shiz?
     for j in range(height):
         for i in range(width):
 
             if mask[j, i] == 0:
                 continue
 
+            neighbors = 0
+
             # Define indices of 4-connected neighbors
-            nj, ni = j - 1, i
-            sj, si = j + 1, i
-            ej, ei = j, i + 1
-            wj, wi = j, i - 1
+            nj = <unsigned int>(j - 1)
+            ni = <unsigned int>(i)
+
+            sj = <unsigned int>(j + 1)
+            si = <unsigned int>(i)
+
+            ej = <unsigned int>(j)
+            ei = <unsigned int>(i + 1)
+
+            wj = <unsigned int>(j)
+            wi = <unsigned int>(i - 1)
 
             # Keep a running variable that represents the
             # element of the vector. This will be assigned
             # to the array at the end.
             coeff = 0.0
             s = source[j, i]
-            
-            coeff += (s - source[nj, ni])
+
             if mask[nj, ni] == 0:
-                coeff += reference[nj, ni]
+                coeff += 2 * reference[nj, ni]
+                coeff -= 2 * source[nj, ni]
             else:
-                coeff += 4 * (s - source[nj, ni])
+                neighbors += 1
+                coeff -= 4 * source[nj, ni]
 
-            coeff += (s - source[sj, si])
             if mask[sj, si] == 0:
-                coeff += reference[sj, si]
+                coeff += 2 * reference[sj, si]
+                coeff -= 2 * source[sj, si]
             else:
-                coeff += 4 * (s - source[sj, si])
+                neighbors += 1
+                coeff -= 4 * source[sj, si]
 
-            coeff += (s - source[ej, ei])
             if mask[ej, ei] == 0:
-                coeff += reference[ej, ei]
+                coeff += 2 * reference[ej, ei]
+                coeff -= 2 * source[ej, ei]
             else:
-                coeff += 4 * (s - source[ej, ei])
+                neighbors += 1
+                coeff -= 4 * source[ej, ei]
 
-            coeff += (s - source[wj, wi])
             if mask[wj, wi] == 0:
-                coeff += reference[wj, wi]
+                coeff += 2 * reference[wj, wi]
+                coeff -= 2 * source[wj, wi]
             else:
-                coeff += 4 * (s - source[wj, wi])
+                neighbors += 1
+                coeff -= 4 * source[wj, wi]
+
+            coeff += (2 * neighbors + 8) * s
 
             # Assign the value to the output vector
             vector[idx] = coeff
