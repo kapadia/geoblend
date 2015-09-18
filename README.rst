@@ -1,10 +1,7 @@
 Geo Blend
-=================
+=========
 
-.. image:: https://travis-ci.org/kapadia/geoblend.svg
-   :target: https://travis-ci.org/kapadia/geoblend
+Geoblend implements `poisson blending <https://www.cs.jhu.edu/~misha/Fall07/Papers/Perez03.pdf>` in Python. Poisson blending is an imaging technique that imposes the color of one image onto another image. This implementation conserves the gradient field of the image being blended.
 
-.. image:: https://coveralls.io/repos/kapadia/geoblend/badge.png
-   :target: https://coveralls.io/r/kapadia/geoblend
 
-Geo-aware poisson blending.
+.. image:: https://pl-amit.s3.amazonaws.com/demo/geoblend/example.png
