@@ -6,4 +6,4 @@ Geoblend implements `poisson blending
 in Python. Poisson blending is an imaging technique that imposes the color of one image onto another image. This implementation conserves the gradient field of the image being blended. 
 
 
-.. image:: https://pl-amit.s3.amazonaws.com/demo/geoblend/example.png
+.. image:: https://pl-amit.s3.amazonaws.com/demo/geoblend/example-.png
