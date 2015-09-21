@@ -15,9 +15,8 @@ def matrix_from_mask(char[:, ::1] mask):
     a mask to construct the matrix.
 
     :param mask:
-        ndarray where nonzero values represent the region
-        of valid pixels in an image. The mask should be
-        typed to uint8.
+        ndarray (uint8) where nonzero values represent the region
+        of valid pixels in an image.
 
     .. todo:: Support valid pixels on the edge of the mask. Currently,
               padding is required between valid data and the mask edge.
@@ -44,19 +43,30 @@ def matrix_from_mask(char[:, ::1] mask):
         unsigned int n_coeff = 5 * n
 
         unsigned int i, j, ii, nj, ni, sj, si, ej, ei, wj, wi, neighbors
+        unsigned int row_north, row_current, row_south
         int offset
 
         unsigned int[:] row = np.empty(n_coeff, dtype=np.uint32)
         unsigned int[:] col = np.empty(n_coeff, dtype=np.uint32)
         int[:] data = np.empty(n_coeff, dtype=np.int32)
 
+        # TODO: Cast mask to boolean before this operation
+        unsigned int[:] row_sum = np.sum(mask, axis=1, dtype=np.uint32)
+
     for j in range(height):
+
+        # Keep track of the nonzero counts in the north, current and south rows
+        row_north = 0
+        row_current = 0
+        row_south = 0
+
         for i in range(width):
 
             if mask[j, i] == 0:
                 continue
 
             neighbors = 0
+            row_current += 1
 
             # Define indices of 4-connected neighbors
             nj = <unsigned int>(j - 1)
@@ -77,39 +87,34 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     neighbors += 1
 
-                    # Count the number of valued pixels in the previous
-                    # row, and current row.
-                    # BT-dubs - this is less efficient than I'd prefer.
                     offset = 0
                     for ii in range(ni, width):
                         if mask[nj, ii] != 0:
                             offset += 1
-                    for ii in range(0, i):
-                        if mask[j, ii] != 0:
-                            offset += 1
+                    # offset = row_sum[nj] - row_north
 
                     row[cidx] = eidx
-                    col[cidx] = eidx - offset
+                    col[cidx] = eidx - (row_current - 1) - offset
                     data[cidx] = -4
 
                     cidx += 1
+                    row_north += 1
 
             if sj <= height:
 
                 if mask[sj, si] != 0:
 
                     neighbors += 1
-
+                    row_south += 1
+                    
                     offset = 0
                     for ii in range(i, width):
                         if mask[j, ii] != 0:
                             offset += 1
-                    for ii in range(0, si):
-                        if mask[sj, ii] != 0:
-                            offset += 1
 
                     row[cidx] = eidx
-                    col[cidx] = eidx + offset
+                    # col[cidx] = eidx + (row_sum[j] - row_current + 1) + (row_south - 1)
+                    col[cidx] = eidx + (offset) + (row_south - 1)
                     data[cidx] = -4
 
                     cidx += 1
