@@ -42,7 +42,7 @@ def matrix_from_mask(char[:, ::1] mask):
         unsigned int n = np.count_nonzero(mask)
         unsigned int n_coeff = 5 * n
 
-        unsigned int i, j, ii, nj, ni, sj, si, ej, ei, wj, wi, neighbors
+        unsigned int i, j, nj, ni, sj, si, ej, ei, wj, wi, neighbors
         unsigned int row_north, row_current, row_south
         int offset
 
@@ -53,20 +53,14 @@ def matrix_from_mask(char[:, ::1] mask):
         # TODO: Cast mask to boolean before this operation
         unsigned int[:] row_sum = np.sum(mask, axis=1, dtype=np.uint32)
 
-    for j in range(height):
+    for j in range(1, height):
 
         # Keep track of the nonzero counts in the north, current and south rows
         row_north = 0
         row_current = 0
         row_south = 0
 
-        for i in range(width):
-
-            if mask[j, i] == 0:
-                continue
-
-            neighbors = 0
-            row_current += 1
+        for i in range(1, width):
 
             # Define indices of 4-connected neighbors
             nj = <unsigned int>(j - 1)
@@ -81,17 +75,26 @@ def matrix_from_mask(char[:, ::1] mask):
             wj = <unsigned int>(j)
             wi = <unsigned int>(i - 1)
 
+            if mask[nj, ni] != 0:
+                row_north += 1
+
+            if mask[sj, si] != 0:
+                row_south += 1
+
+            if mask[j, i] == 0:
+                continue
+
+            neighbors = 0
+            row_current += 1
+
             if nj <= height:
 
                 if mask[nj, ni] != 0:
 
                     neighbors += 1
-                    row_north += 1
 
                     offset = row_current - 1
-                    for ii in range(ni, width):
-                        if mask[nj, ii] != 0:
-                            offset += 1
+                    offset += row_sum[nj] - row_north + 1
 
                     row[cidx] = eidx
                     col[cidx] = eidx - offset
@@ -104,12 +107,8 @@ def matrix_from_mask(char[:, ::1] mask):
                 if mask[sj, si] != 0:
 
                     neighbors += 1
-                    row_south += 1
 
-                    offset = 0
-                    for ii in range(0, si):
-                        if mask[sj, ii] != 0:
-                            offset += 1
+                    offset = row_south - 1
                     offset += row_sum[j] - row_current + 1
 
                     row[cidx] = eidx
