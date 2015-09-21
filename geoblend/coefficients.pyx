@@ -86,19 +86,18 @@ def matrix_from_mask(char[:, ::1] mask):
                 if mask[nj, ni] != 0:
 
                     neighbors += 1
+                    row_north += 1
 
-                    offset = 0
+                    offset = row_current - 1
                     for ii in range(ni, width):
                         if mask[nj, ii] != 0:
                             offset += 1
-                    # offset = row_sum[nj] - row_north
 
                     row[cidx] = eidx
-                    col[cidx] = eidx - (row_current - 1) - offset
+                    col[cidx] = eidx - offset
                     data[cidx] = -4
 
                     cidx += 1
-                    row_north += 1
 
             if sj <= height:
 
@@ -106,15 +105,15 @@ def matrix_from_mask(char[:, ::1] mask):
 
                     neighbors += 1
                     row_south += 1
-                    
+
                     offset = 0
-                    for ii in range(i, width):
-                        if mask[j, ii] != 0:
+                    for ii in range(0, si):
+                        if mask[sj, ii] != 0:
                             offset += 1
+                    offset += row_sum[j] - row_current + 1
 
                     row[cidx] = eidx
-                    # col[cidx] = eidx + (row_sum[j] - row_current + 1) + (row_south - 1)
-                    col[cidx] = eidx + (offset) + (row_south - 1)
+                    col[cidx] = eidx + offset
                     data[cidx] = -4
 
                     cidx += 1
