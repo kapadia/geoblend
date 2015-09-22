@@ -22,7 +22,7 @@ def blend(source, reference, mask, solver):
     vector = create_vector(source.astype(np.float64), reference.astype(np.float64), mask)
 
     x0 = source[indices].astype('float64')
-    pixels = np.round(solver.solve(b=vector, x0=x0, tol=1e-05, accel='cg'))
+    pixels = np.round(solver.solve(b=vector, x0=x0, tol=1e-03, accel='cg'))
     
     # TODO: Add dtype min/max parameter
     arr = np.zeros_like(source)
