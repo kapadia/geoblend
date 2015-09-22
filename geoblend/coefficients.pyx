@@ -17,9 +17,6 @@ def matrix_from_mask(char[:, ::1] mask):
     :param mask:
         ndarray (uint8) where nonzero values represent the region
         of valid pixels in an image.
-
-    .. todo:: Support valid pixels on the edge of the mask. Currently,
-              padding is required between valid data and the mask edge.
     """
 
 
@@ -53,14 +50,14 @@ def matrix_from_mask(char[:, ::1] mask):
         # TODO: Cast mask to boolean before this operation
         unsigned int[:] row_sum = np.sum(mask, axis=1, dtype=np.uint32)
 
-    for j in range(1, height):
+    for j in range(1, height - 1):
 
         # Keep track of the nonzero counts in the north, current and south rows
         row_north = 0
         row_current = 0
         row_south = 0
 
-        for i in range(1, width):
+        for i in range(1, width - 1):
 
             # Define indices of 4-connected neighbors
             nj = <unsigned int>(j - 1)
@@ -87,59 +84,51 @@ def matrix_from_mask(char[:, ::1] mask):
             neighbors = 0
             row_current += 1
 
-            if nj <= height:
+            if mask[nj, ni] != 0:
 
-                if mask[nj, ni] != 0:
+                neighbors += 1
 
-                    neighbors += 1
+                offset = row_current - 1
+                offset += row_sum[nj] - row_north + 1
 
-                    offset = row_current - 1
-                    offset += row_sum[nj] - row_north + 1
+                row[cidx] = eidx
+                col[cidx] = eidx - offset
+                data[cidx] = -4
 
-                    row[cidx] = eidx
-                    col[cidx] = eidx - offset
-                    data[cidx] = -4
+                cidx += 1
 
-                    cidx += 1
+            if mask[sj, si] != 0:
 
-            if sj <= height:
+                neighbors += 1
 
-                if mask[sj, si] != 0:
+                offset = row_south - 1
+                offset += row_sum[j] - row_current + 1
 
-                    neighbors += 1
+                row[cidx] = eidx
+                col[cidx] = eidx + offset
+                data[cidx] = -4
 
-                    offset = row_south - 1
-                    offset += row_sum[j] - row_current + 1
+                cidx += 1
 
-                    row[cidx] = eidx
-                    col[cidx] = eidx + offset
-                    data[cidx] = -4
+            if mask[ej, ei] != 0:
 
-                    cidx += 1
+                neighbors += 1
 
-            if ei <= width:
+                row[cidx] = eidx + 1
+                col[cidx] = eidx
+                data[cidx] = -4
 
-                if mask[ej, ei] != 0:
+                cidx += 1
 
-                    neighbors += 1
+            if mask[wj, wi] != 0:
 
-                    row[cidx] = eidx + 1
-                    col[cidx] = eidx
-                    data[cidx] = -4
+                neighbors += 1
 
-                    cidx += 1
+                row[cidx] = eidx - 1
+                col[cidx] = eidx
+                data[cidx] = -4
 
-            if wi <= width:
-
-                if mask[wj, wi] != 0:
-
-                    neighbors += 1
-
-                    row[cidx] = eidx - 1
-                    col[cidx] = eidx
-                    data[cidx] = -4
-
-                    cidx += 1
+                cidx += 1
 
             row[cidx] = eidx
             col[cidx] = eidx
