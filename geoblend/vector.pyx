@@ -6,7 +6,7 @@ cimport cython
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] mask):
+def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] mask, double multiplier = 1.0):
     """
     Computes the column vector needed to solve the linearized Poisson equation.
     This vector returned preserves the gradient of the source image. Other functions
@@ -21,6 +21,9 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
         ndarray where nonzero values represent the region
         of valid pixels in an image. The mask should be
         typed to uint8.
+    :param multipler:
+        Scaling factor to apply to the gradient. This is useful when working with images that
+        live in different regions of the dynamic range.
 
     .. todo:: source and reference may be uint16, but arthimetic operations need typecasting.
     """
@@ -65,35 +68,35 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
             # element of the vector. This will be assigned
             # to the array at the end.
             coeff = 0.0
-            s = source[j, i]
+            s = multiplier * source[j, i]
 
             if mask[nj, ni] == 0:
                 coeff += 2 * reference[nj, ni]
-                coeff -= 2 * source[nj, ni]
+                coeff -= 2 * multiplier * source[nj, ni]
             else:
                 neighbors += 1
-                coeff -= 4 * source[nj, ni]
+                coeff -= 4 * multiplier * source[nj, ni]
 
             if mask[sj, si] == 0:
                 coeff += 2 * reference[sj, si]
-                coeff -= 2 * source[sj, si]
+                coeff -= 2 * multiplier * source[sj, si]
             else:
                 neighbors += 1
-                coeff -= 4 * source[sj, si]
+                coeff -= 4 * multiplier * source[sj, si]
 
             if mask[ej, ei] == 0:
                 coeff += 2 * reference[ej, ei]
-                coeff -= 2 * source[ej, ei]
+                coeff -= 2 * multiplier * source[ej, ei]
             else:
                 neighbors += 1
-                coeff -= 4 * source[ej, ei]
+                coeff -= 4 * multiplier * source[ej, ei]
 
             if mask[wj, wi] == 0:
                 coeff += 2 * reference[wj, wi]
-                coeff -= 2 * source[wj, wi]
+                coeff -= 2 * multiplier * source[wj, wi]
             else:
                 neighbors += 1
-                coeff -= 4 * source[wj, wi]
+                coeff -= 4 * multiplier * source[wj, wi]
 
             coeff += (2 * neighbors + 8) * s
 
