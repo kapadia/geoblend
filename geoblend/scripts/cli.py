@@ -10,20 +10,16 @@ from pyamg.relaxation.smoothing import change_smoothers
 from geoblend import blend
 from geoblend.coefficients import matrix_from_mask
 from geoblend.utilities import get_mask
-from geoblend.solver import create_multilevel_solver, load_multilevel_solver
+from geoblend.solver import create_multilevel_solver
 
 
-@click.group()
-def geoblend():
-    pass
-
-
-@click.command('poisson')
+@click.command('geoblend')
 @click.argument('srcpath', type=click.Path(exists=True))
 @click.argument('refpath', type=click.Path(exists=True))
 @click.argument('dstpath', type=click.Path(exists=False))
 @click.option("--matrix")
-def poisson(srcpath, refpath, dstpath, matrix):
+@click.option("--gradient-multiplier", default=1.0, type=click.FLOAT)
+def geoblend(srcpath, refpath, dstpath, matrix, gradient_multiplier):
     """
     Poisson blend the source image against the reference image.
     """
@@ -55,30 +51,8 @@ def poisson(srcpath, refpath, dstpath, matrix):
                     source = src.read(bidx)
                     reference = ref.read(bidx)
 
-                    arr = blend(source, reference, mask, ml)
+                    arr = blend(source, reference, mask, ml, gradient_multiplier)
                     dst.write_band(bidx, arr)
-
-
-@click.command('create-solver')
-@click.argument('srcpath', type=click.Path(exists=True))
-@click.argument('dstpath', type=click.Path(exists=False))
-def create_solver(srcpath, dstpath):
-    """
-    Create a multi-level solver and save to disk.
-    """
-
-    mask = get_mask(srcpath)
-    indices = np.nonzero(mask)
-
-    with rio.drivers():
-        with rio.open(srcpath) as src:
-            mat = matrix_from_mask(mask)
-
-    create_multilevel_solver(dstpath, mat)
-
-
-geoblend.add_command(poisson)
-geoblend.add_command(create_solver)
 
 
 if __name__ == '__main__':
