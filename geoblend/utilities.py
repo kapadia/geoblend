@@ -1,7 +1,8 @@
 
 import numpy as np
 import rasterio as rio
-from skimage.morphology import binary_erosion, disk
+
+from skimage.morphology import disk, binary_erosion
 
 
 def get_mask(srcpath):
@@ -25,10 +26,13 @@ def get_mask(srcpath):
                 mask[:, 0] = 0
                 mask[:, -1] = 0
             else:
-                mask = src.read(4)
-                mask[np.nonzero(mask)] = 1
-                print "10"
-                mask = binary_erosion(mask, disk(10)).astype(np.uint8)
-                print "EROSION DONE"
+                mask = src.read(4).astype(np.bool)
+                mask = binary_erosion(mask, disk(3)).astype(np.uint8)
+
+                # height, width = src.shape
+                # h2, w2 = height / 2, width / 2
+                # mask = np.zeros(src.shape, dtype=np.uint8)
+                # r = 600
+                # mask[h2 - r: h2 + r + 1, w2 - r: w2 + r + 1] = disk(r)
 
     return mask
