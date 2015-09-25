@@ -3,7 +3,7 @@ import numpy as np
 from geoblend.vector import create_vector
 
 
-def blend(source, reference, mask, solver, gradient_multiplier):
+def blend(source, reference, mask, solver, gradient_multiplier=1.0):
     """
     Run a Poisson blend between two arrays.
     
