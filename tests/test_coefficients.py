@@ -4,6 +4,8 @@ import numpy as np
 from scipy import sparse
 from geoblend.coefficients import matrix_from_mask
 
+np.set_printoptions(linewidth=200, threshold=1e6)
+
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 

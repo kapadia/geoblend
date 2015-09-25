@@ -3,7 +3,7 @@ import numpy as np
 from geoblend.vector import create_vector
 
 
-def blend(source, reference, mask, solver):
+def blend(source, reference, mask, solver, gradient_multiplier=1.0):
     """
     Run a Poisson blend between two arrays.
     
@@ -19,7 +19,7 @@ def blend(source, reference, mask, solver):
 
     indices = np.nonzero(mask)
 
-    vector = create_vector(source.astype(np.float64), reference.astype(np.float64), mask)
+    vector = create_vector(source.astype(np.float64), reference.astype(np.float64), mask, multiplier=gradient_multiplier)
 
     x0 = source[indices].astype('float64')
     pixels = np.round(solver.solve(b=vector, x0=x0, tol=1e-03, accel='cg'))
