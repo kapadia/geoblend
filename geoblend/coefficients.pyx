@@ -1,8 +1,39 @@
 
 import numpy as np
+
 cimport numpy as np
-from scipy.sparse import csr_matrix
 cimport cython
+cimport openmp
+
+from scipy.sparse import csr_matrix
+from cython.parallel cimport prange, threadid
+
+
+cdef inline unsigned int[:] count_nonzero_along_axis(char[:, ::1] arr):
+    
+    cdef:
+        unsigned int i, j, count
+        unsigned int height = arr.shape[0]
+        unsigned int width = arr.shape[1]
+        unsigned int[:] row_sum = np.empty(height, dtype=np.uint32)
+    
+    for j in range(height):
+        count = 0
+        for i in range(width):
+            if arr[j, i] != 0:
+                count += 1
+            if i == width - 1:
+                row_sum[j] = count
+
+    return np.asarray(row_sum)
+
+
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# def count_along_axis(unsigned char[:, ::1] arr):
+#
+#     return count_nonzero_along_axis(arr)
+    
 
 
 @cython.boundscheck(False)
@@ -21,6 +52,9 @@ def matrix_from_mask(char[:, ::1] mask):
 
 
     cdef:
+
+        int max_threads = openmp.omp_get_max_threads()
+
         unsigned int height = mask.shape[0]
         unsigned int width = mask.shape[1]
 
@@ -36,7 +70,8 @@ def matrix_from_mask(char[:, ::1] mask):
         # Another approach is to be generous when allocating the row/column/data
         # arrays by using the upper bound for the number of coefficients.
         # For N unknown pixels, there are at most 5 * N coefficients.
-        unsigned int n = np.count_nonzero(mask)
+        unsigned int[:] row_sum = count_nonzero_along_axis(mask)
+        unsigned int n = np.sum(row_sum)
         unsigned int n_coeff = 5 * n
 
         unsigned int i, j, nj, ni, sj, si, ej, ei, wj, wi, neighbors
@@ -46,9 +81,6 @@ def matrix_from_mask(char[:, ::1] mask):
         unsigned int[:] row = np.empty(n_coeff, dtype=np.uint32)
         unsigned int[:] col = np.empty(n_coeff, dtype=np.uint32)
         int[:] data = np.empty(n_coeff, dtype=np.int32)
-
-        # TODO: Cast mask to boolean before this operation
-        unsigned int[:] row_sum = np.sum(mask, axis=1, dtype=np.uint32)
 
     for j in range(1, height - 1):
 
