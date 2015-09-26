@@ -28,14 +28,6 @@ cdef inline unsigned int[:] count_nonzero_along_axis(char[:, ::1] arr):
     return np.asarray(row_sum)
 
 
-# @cython.boundscheck(False)
-# @cython.wraparound(False)
-# def count_along_axis(unsigned char[:, ::1] arr):
-#
-#     return count_nonzero_along_axis(arr)
-    
-
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def matrix_from_mask(char[:, ::1] mask):
