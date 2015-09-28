@@ -1,5 +1,4 @@
 
-import os
 from codecs import open as codecs_open
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
