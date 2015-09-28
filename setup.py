@@ -6,17 +6,13 @@ from setuptools.extension import Extension
 from Cython.Build import cythonize
 import numpy as np
 
-# TODO: Generalize this. Check that openmp is available.
-os.environ["CC"] = "/usr/local/Cellar/gcc/5.1.0/bin/gcc-5"
 
 # Get the long description from the relevant file
 with codecs_open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 ext_options = {
-    "include_dirs": [ np.get_include() ],
-    "extra_compile_args": [ '-fopenmp' ],
-    "extra_link_args": [ '-fopenmp' ]
+    "include_dirs": [ np.get_include() ]
 }
 
 extensions = [

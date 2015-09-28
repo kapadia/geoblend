@@ -1,12 +1,9 @@
 
 import numpy as np
+from scipy.sparse import csr_matrix
 
 cimport numpy as np
 cimport cython
-cimport openmp
-
-from scipy.sparse import csr_matrix
-from cython.parallel cimport prange, threadid
 
 
 cdef inline unsigned int[:] count_nonzero_along_axis(char[:, ::1] arr):
@@ -44,8 +41,6 @@ def matrix_from_mask(char[:, ::1] mask):
 
 
     cdef:
-
-        int max_threads = openmp.omp_get_max_threads()
 
         unsigned int height = mask.shape[0]
         unsigned int width = mask.shape[1]
