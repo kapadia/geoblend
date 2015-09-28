@@ -10,7 +10,6 @@ import numpy as np
 with codecs_open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
-# Add numpy to include directory for cython compilation
 ext_options = {
     "include_dirs": [ np.get_include() ]
 }
