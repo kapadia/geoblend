@@ -2,12 +2,13 @@
 import os
 import shutil
 from codecs import open as codecs_open
+import numpy as np
 from setuptools import setup, find_packages
 from distutils.core import Distribution, Extension
 from distutils.command.build_ext import build_ext
-from distutils.errors import LinkError
+from distutils import errors
 from Cython.Build import cythonize
-import numpy as np
+from Cython.Compiler.Errors import CompileError
 
 
 def check_for_openmp():
@@ -24,7 +25,7 @@ def check_for_openmp():
     }
 
     extensions = [
-        Extension('geoblend.openmp', ['geoblend/openmp.pyx'], **ext_options)
+        Extension('geoblend.openmp_check', ['geoblend/openmp_check.pyx'], **ext_options)
     ]
 
     build_extension = build_ext(distribution)
@@ -47,8 +48,8 @@ try:
     check_for_openmp()
     ext_options['extra_compile_args'] = ['-fopenmp']
     ext_options['extra_link_args'] = ['-fopenmp']
-    src = os.path.join(pkg_dir, 'geoblend', '_coefficients_openmp.pyx')
-except LinkError:
+    src = os.path.join(pkg_dir, 'geoblend', '_coefficients_omp.pyx')
+except (errors.LinkError, errors.CompileError, CompileError):
     src = os.path.join(pkg_dir, 'geoblend', '_coefficients.pyx')
 
 shutil.copy(src, dst)
