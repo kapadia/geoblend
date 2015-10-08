@@ -6,13 +6,8 @@ from setuptools import setup, find_packages
 from distutils.core import Distribution, Extension
 from distutils.command.build_ext import build_ext
 from distutils.errors import LinkError
-# from setuptools.extension import Extension
 from Cython.Build import cythonize
 import numpy as np
-
-# TODO: Determine how to check for OpenMP
-# os.environ["CC"] = "/usr/local/Cellar/gcc/5.1.0/bin/gcc-5"
-
 
 
 def check_for_openmp():
@@ -47,8 +42,8 @@ extensions = [
 
 pkg_dir = os.path.dirname(os.path.realpath(__file__))
 dst = os.path.join(pkg_dir, 'geoblend', 'coefficients.pyx')
-try:
 
+try:
     check_for_openmp()
     ext_options['extra_compile_args'] = ['-fopenmp']
     ext_options['extra_link_args'] = ['-fopenmp']
