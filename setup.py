@@ -75,7 +75,7 @@ setup(name='geoblend',
       license='MIT',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
-      ext_modules=cythonize(extensions, force=True),
+      ext_modules=cythonize(extensions),
       zip_safe=False,
       install_requires=[
           'click',
