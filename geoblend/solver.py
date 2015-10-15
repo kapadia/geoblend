@@ -1,52 +1,17 @@
 
-import pyamg
 import numpy as np
 from scipy import sparse
 
+import pyamg
+from pyamg.relaxation.smoothing import change_smoothers
 
-def save_multilevel_solver(filename, levels):
+
+def load(file):
     """
-    Save levels from a PyAMG multilevel solver
+    Deserialize a file containing various numpy matrices to
+    a PyAMG multigrid solver.
 
-    :param filename:
-    :param levels:
-        PyAMG multilevel solver
-    """
-
-    def restructure_level_for_export(level):
-
-        matrix_keys = filter(lambda k: k in ['A', 'B', 'P', 'R'], level.__dict__.keys())
-        obj = {}
-
-        for key in matrix_keys:
-            array = getattr(level, key)
-
-            if type(array) == np.ndarray:
-                obj[key] = array
-            else:
-                obj[key] = {
-                    "data": array.data,
-                    "indices": array.indices,
-                    "indptr": array.indptr,
-                    "shape": array.shape,
-                    "format": array.format
-                }
-
-        # TODO: Save the configuration of the pre and postsmoother functions
-        # if 'presmoother' in level.__dict__.keys():
-        #     obj['presmoother'] = {}
-
-        return obj
-
-    output = map(restructure_level_for_export, levels)
-    np.savez(filename, levels=output)
-
-
-def load_multilevel_solver(filename):
-    """
-    Load a multilevel solver from disk.
-
-    :param filename:
+    :param file:
     """
 
     class level:
@@ -79,24 +44,49 @@ def load_multilevel_solver(filename):
 
         return l
 
-    data = np.load(filename)
-    return map(load_level, data["levels"])
+    data = np.load(file)
+    levels = map(load_level, data["levels"])
+
+    ml = pyamg.multilevel.multilevel_solver(levels, coarse_solver='pinv2')
+    change_smoothers(ml, 'gauss_seidel', 'gauss_seidel')
+
+    return ml
 
 
-def create_multilevel_solver(filename, matrix):
+def save(file, solver):
     """
-    Precompute a multilevel solver for a given coefficient matrix.
+    Serialize a PyAMG multigrid solver to disk using numpy's
+    binary format.
     
-    Each level contains a different resolution of the coefficient matrix, and
-    additional matrices to assist with inversion.
-    
-    :param filename:
-    :param matrix:
-        CSR sparse matrix
+    :param file:
+    :param solver:
+        Multi-level PyAMG solver.
     """
 
-    shape = matrix.shape
-    b = np.ones((shape[0], 1))
-    ml = pyamg.smoothed_aggregation_solver(matrix, b, max_coarse=10)
-    
-    save_multilevel_solver(filename, ml.levels)
+    def export_level(level):
+
+        matrix_keys = filter(lambda k: k in ['A', 'B', 'P', 'R'], level.__dict__.keys())
+        obj = {}
+
+        for key in matrix_keys:
+            array = getattr(level, key)
+
+            if type(array) == np.ndarray:
+                obj[key] = array
+            else:
+                obj[key] = {
+                    "data": array.data,
+                    "indices": array.indices,
+                    "indptr": array.indptr,
+                    "shape": array.shape,
+                    "format": array.format
+                }
+
+        # TODO: Save the configuration of the pre and postsmoother functions
+        # if 'presmoother' in level.__dict__.keys():
+        #     obj['presmoother'] = {}
+
+        return obj
+
+    output = map(export_level, solver.levels)
+    np.savez(file, levels=output)
