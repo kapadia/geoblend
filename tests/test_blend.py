@@ -5,7 +5,6 @@ import pyamg
 
 from geoblend.vector import create_vector
 from geoblend.coefficients import matrix_from_mask
-from geoblend.solver import create_multilevel_solver
 from geoblend import blend
 
 
