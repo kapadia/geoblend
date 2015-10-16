@@ -6,17 +6,18 @@ cimport cython
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] mask, double multiplier = 1.0):
+def create_vector(unsigned short[:, ::1] source, unsigned short[:, ::1] reference, char[:, ::1] mask, double multiplier = 1.0):
     """
     Computes the column vector needed to solve the linearized Poisson equation.
     This vector returned preserves the gradient of the source image. Other functions
     may be written to preserve other vector fields.
 
     :param source:
-        The source image that will have its gradient conserved.
+        The source image represented by a uint16 ndarray. This
+        image will have its gradient conserved in the blend process.
     :param reference:
-        The reference image that will be used to sample for the boundary
-        conditions.
+        The reference image represented by a uint16 ndarray. This
+        image will be used to sample for the boundary conditions.
     :param mask:
         ndarray where nonzero values represent the region
         of valid pixels in an image. The mask should be
@@ -24,8 +25,6 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     :param multipler:
         Scaling factor to apply to the gradient. This is useful when working with images that
         live in different regions of the dynamic range.
-
-    .. todo:: source and reference may be uint16, but arthimetic operations need typecasting.
     """
 
     cdef int height = mask.shape[0]
@@ -36,6 +35,8 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
     cdef double coeff, s
 
     cdef int n = np.count_nonzero(mask)
+
+    # PyAMG requires a double typed vector
     cdef double[:] vector = np.empty(n, dtype=np.float64)
 
     assert source.shape[0] == height
@@ -71,34 +72,34 @@ def create_vector(double[:, ::1] source, double[:, ::1] reference, char[:, ::1] 
             s = multiplier * source[j, i]
 
             if mask[nj, ni] == 0:
-                coeff += 2 * reference[nj, ni]
-                coeff -= 2 * multiplier * source[nj, ni]
+                coeff += <double>(2 * reference[nj, ni])
+                coeff -= <double>(2 * multiplier * source[nj, ni])
             else:
                 neighbors += 1
-                coeff -= 4 * multiplier * source[nj, ni]
+                coeff -= <double>(4 * multiplier * source[nj, ni])
 
             if mask[sj, si] == 0:
-                coeff += 2 * reference[sj, si]
-                coeff -= 2 * multiplier * source[sj, si]
+                coeff += <double>(2 * reference[sj, si])
+                coeff -= <double>(2 * multiplier * source[sj, si])
             else:
                 neighbors += 1
-                coeff -= 4 * multiplier * source[sj, si]
+                coeff -= <double>(4 * multiplier * source[sj, si])
 
             if mask[ej, ei] == 0:
-                coeff += 2 * reference[ej, ei]
-                coeff -= 2 * multiplier * source[ej, ei]
+                coeff += <double>(2 * reference[ej, ei])
+                coeff -= <double>(2 * multiplier * source[ej, ei])
             else:
                 neighbors += 1
-                coeff -= 4 * multiplier * source[ej, ei]
+                coeff -= <double>(4 * multiplier * source[ej, ei])
 
             if mask[wj, wi] == 0:
-                coeff += 2 * reference[wj, wi]
-                coeff -= 2 * multiplier * source[wj, wi]
+                coeff += <double>(2 * reference[wj, wi])
+                coeff -= <double>(2 * multiplier * source[wj, wi])
             else:
                 neighbors += 1
-                coeff -= 4 * multiplier * source[wj, wi]
+                coeff -= <double>(4 * multiplier * source[wj, wi])
 
-            coeff += (2 * neighbors + 8) * s
+            coeff += <double>((2 * neighbors + 8) * s)
 
             # Assign the value to the output vector
             vector[idx] = coeff
