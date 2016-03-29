@@ -39,6 +39,7 @@ ext_options = {
 }
 extensions = [
     Extension('geoblend.vector', ['geoblend/vector.pyx'], **ext_options)
+    Extension('geoblend.convolve', ['geoblend/convolve.pyx'], **ext_options)
 ]
 
 pkg_dir = os.path.dirname(os.path.realpath(__file__))
@@ -80,7 +81,7 @@ setup(name='geoblend',
       zip_safe=False,
       install_requires=[
           'click',
-          'rasterio',
+          # 'rasterio',
           'pyamg',
           'scipy',
           'scikit-image'
