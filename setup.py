@@ -38,7 +38,7 @@ ext_options = {
     'include_dirs': [ np.get_include() ]
 }
 extensions = [
-    Extension('geoblend.vector', ['geoblend/vector.pyx'], **ext_options)
+    Extension('geoblend.vector', ['geoblend/vector.pyx'], **ext_options),
     Extension('geoblend.convolve', ['geoblend/convolve.pyx'], **ext_options)
 ]
 
