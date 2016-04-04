@@ -41,7 +41,7 @@ def test_convolve_mask_aware():
     gradient = convolve_mask_aware(source, mask)
 
     # Should match except at the boundaries due to different rules
-    assert np.all(expected[2:-2, 2:-2] == gradient[2:-2, 2:-2])
+    np.testing.assert_almost_equal(gradient[2:-2, 2:-2], expected[2:-2, 2:-2])
 
 
 if __name__ == '__main__':
