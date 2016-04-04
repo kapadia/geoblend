@@ -66,7 +66,7 @@ with codecs_open('README.rst', encoding='utf-8') as f:
 
 
 setup(name='geoblend',
-      version='0.2.0',
+      version='0.2.1',
       description=u"Geo-aware poisson blending.",
       long_description=long_description,
       classifiers=[],
