@@ -2,12 +2,13 @@ cimport cython
 import numpy as np
 cimport numpy as np
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def convolve_mask_aware(double[:, ::1] arr, char[:, ::1] mask):
+def convolve_mask_aware(unsigned short[:, ::1] arr, char[:, ::1] mask):
     """
     Convolve a 2D array with a 3x3 structuring element. The convolution operates only over
-    regions specified by the mask.
+    regions specified by the mask. The following kernel is used:
     
      0  -1   0
     -1   4  -1
@@ -19,6 +20,9 @@ def convolve_mask_aware(double[:, ::1] arr, char[:, ::1] mask):
         ndarray where nonzero values represent the region
         of valid pixels in an image. The mask should be
         typed to uint8.
+
+    .. todo:: Allow a kernel to be specified.
+    .. todo:: Allow rules along mask/array boundaries.
     """
 
     cdef int height = mask.shape[0]
@@ -36,7 +40,7 @@ def convolve_mask_aware(double[:, ::1] arr, char[:, ::1] mask):
 
             if mask[j, i] == 0:
                 continue
-            
+
             x = 0.0
             neighbors = 0
 
@@ -52,26 +56,26 @@ def convolve_mask_aware(double[:, ::1] arr, char[:, ::1] mask):
 
             wj = <int>(j)
             wi = <int>(i - 1)
-    
+
             # 1. Check that the neighbor index is within image bounds
             # 2. Check that the neighbor index is within the mask
             if (nj >= 0) and (mask[nj, ni] != 0):          
                 neighbors += 1
-                x += (-1.0 * arr[nj, ni])
+                x += (-1.0 * <double>arr[nj, ni])
             
             if (sj < height) and (mask[sj, si] != 0):
                 neighbors += 1
-                x += (-1.0 * arr[sj, si])
+                x += (-1.0 * <double>arr[sj, si])
             
             if (ei < width) and (mask[ej, ei] != 0):
                 neighbors += 1
-                x += (-1.0 * arr[ej, ei])
+                x += (-1.0 * <double>arr[ej, ei])
             
             if (wi >= 0) and (mask[wj, wi] != 0):
                 neighbors += 1
-                x += (-1.0 * arr[wj, wi])
+                x += (-1.0 * <double>arr[wj, wi])
             
-            x += (neighbors * arr[j, i])
+            x += (<double>neighbors * <double>arr[j, i])
             img[j, i] = x
 
     return np.asarray(img)
