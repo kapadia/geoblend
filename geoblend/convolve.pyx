@@ -1,6 +1,7 @@
 cimport cython
 import numpy as np
 cimport numpy as np
+from libc.math cimport fabs
 
 
 @cython.boundscheck(False)
@@ -65,7 +66,7 @@ def convolve_mask_aware(unsigned short[:, ::1] arr, char[:, ::1] mask, double th
                     neighbors += 1
                     x += (-1.0 * <double>arr[nj, ni])
                 else:
-                    d = np.abs(s - <double>arr[nj, ni])
+                    d = fabs(s - <double>arr[nj, ni])
                     if (d > threshold):
                         neighbors += 1
                         x += (-1.0 * <double>arr[nj, ni])
@@ -75,7 +76,7 @@ def convolve_mask_aware(unsigned short[:, ::1] arr, char[:, ::1] mask, double th
                     neighbors += 1
                     x += (-1.0 * <double>arr[sj, si])
                 else:
-                    d = np.abs(s - <double>arr[sj, si])
+                    d = fabs(s - <double>arr[sj, si])
                     if (d > threshold):
                         neighbors += 1
                         x += (-1.0 * <double>arr[sj, si])
@@ -85,7 +86,7 @@ def convolve_mask_aware(unsigned short[:, ::1] arr, char[:, ::1] mask, double th
                     neighbors += 1
                     x += (-1.0 * <double>arr[ej, ei])
                 else:
-                    d = np.abs(s - <double>arr[ej, ei])
+                    d = fabs(s - <double>arr[ej, ei])
                     if (d > threshold):
                         neighbors += 1
                         x += (-1.0 * <double>arr[ej, ei])
@@ -95,7 +96,7 @@ def convolve_mask_aware(unsigned short[:, ::1] arr, char[:, ::1] mask, double th
                     neighbors += 1
                     x += (-1.0 * <double>arr[wj, wi])
                 else:
-                    d = np.abs(s - <double>arr[wj, wi])
+                    d = fabs(s - <double>arr[wj, wi])
                     if (d > threshold):
                         neighbors += 1
                         x += (-1.0 * <double>arr[wj, wi])
