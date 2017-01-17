@@ -39,7 +39,8 @@ ext_options = {
 }
 extensions = [
     Extension('geoblend.vector', ['geoblend/vector.pyx'], **ext_options),
-    Extension('geoblend.convolve', ['geoblend/convolve.pyx'], **ext_options)
+    Extension('geoblend.convolve', ['geoblend/convolve.pyx'], **ext_options),
+    Extension('geoblend.interpolation', ['geoblend/interpolation.pyx'], **ext_options)
 ]
 
 pkg_dir = os.path.dirname(os.path.realpath(__file__))
