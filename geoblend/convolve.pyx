@@ -105,3 +105,67 @@ def convolve_mask_aware(unsigned short[:, ::1] arr, char[:, ::1] mask, double th
             img[j, i] = x
 
     return np.asarray(img)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def convolve_along_boundaries(float[:, ::1] arr, char[:, ::1] labels):
+    """
+    Apply a convolution using a median filter only along boundaries of a labelled image.
+
+    :param arr:
+        A 2D array that will undergo partial convolution.
+    :param labels:
+        Labeled image
+    """
+
+    cdef int height = labels.shape[0]
+    cdef int width = labels.shape[1]
+
+    assert arr.shape[0] == height
+    assert arr.shape[1] == width
+
+    cdef float neighbors
+    cdef float valid_neighbors
+    cdef float x
+
+    cdef int i, j, ni, nj, ei, ej, si, sj, wi, wj
+    cdef int dx, dy, ii, jj
+    cdef int labelIdx
+
+    cdef float[:, :] out = np.zeros((height, width), dtype=np.float32)
+
+    for j in range(height):
+        for i in range(width):
+
+            # Get the source trace index for the current pixel
+            labelIdx = labels[j, i]
+
+            neighbors = 0.0
+            valid_neighbors = 0.0
+            x = 0.0
+
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+
+                    ii = <int>(i + dx)
+                    jj = <int>(j + dy)
+
+                    if (ii == 0) and (jj == 0):
+                        continue
+
+                    if (jj >= 0) and (jj < height):
+                        if (ii >= 0) and (ii < width):
+
+                            neighbors += 1
+                            x += arr[jj, ii]
+
+                            if (labels[jj, ii] == labelIdx):
+                                valid_neighbors += 1
+
+            if (neighbors == valid_neighbors):
+                out[j, i] = arr[j, i]
+            else:
+                out[j, i] = (x / neighbors)
+
+    return np.asarray(out)
